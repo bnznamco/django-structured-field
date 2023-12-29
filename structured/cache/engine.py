@@ -1,6 +1,6 @@
 from collections import defaultdict
 from inspect import isclass
-from typing import Any, Dict, Sequence
+from typing import Any, Dict, Sequence, Type
 from typing_extensions import get_args, get_origin
 from structured.settings import STRUCTURED_FIELD_CACHE_ENABLED
 from structured.pydantic.fields import ForeignKey, QuerySet
@@ -27,7 +27,7 @@ class ValueWithCache:
     def __init__(self, cache, model, value) -> None:
         self.cache: Cache = cache
         self.value: Union[Iterable[Union[str, int]], str, int] = value
-        self.model: type[DjangoModel] = model
+        self.model: Type[DjangoModel] = model
 
     def retrieve(self):
         cache = self.cache.get(self.model)
@@ -68,7 +68,7 @@ class CacheEngine:
         return cls(related_fields=cls.inspect_related_fields(model))
 
     @classmethod
-    def inspect_related_fields(cls, model: type[BaseModel]) -> Dict[str, RelInfo]:
+    def inspect_related_fields(cls, model: Type[BaseModel]) -> Dict[str, RelInfo]:
         related = {}
         for field_name, field in model.model_fields.items():
             annotation = field.annotation

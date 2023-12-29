@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Generic, TypeVar, Union
+from typing import Any, Callable, Dict, Generic, TypeVar, Union, List
 
 from django.db import models as django_models
 from pydantic import SerializationInfo
@@ -84,7 +84,7 @@ class QuerySet(Generic[T]):
         model_class = get_type(source)
 
         def validate_from_pk_list(
-            values: list[Union[int, str]]
+            values: List[Union[int, str]]
         ) -> django_models.QuerySet:
             preserved = django_models.Case(
                 *[django_models.When(pk=pk, then=pos) for pos, pk in enumerate(values)]
@@ -103,7 +103,7 @@ class QuerySet(Generic[T]):
         pk_attname = model_class._meta.pk.attname
 
         def validate_from_dict(
-            values: list[Dict[str, Union[str, int]]]
+            values: List[Dict[str, Union[str, int]]]
         ) -> django_models.QuerySet:
             return validate_from_pk_list([data[pk_attname] for data in values])
 
