@@ -1,0 +1,52 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=61.2"]
+
+[project]
+authors = [{name = "Lotrèk", email = "gabriele@lotrek.it"}]
+classifiers = [
+  "Environment :: Web Environment",
+  "Framework :: Django",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+]
+dependencies = [
+  "djangorestframework>=3.10.0,<4.0.0",
+  "Django>=3.2",
+  "pydantic~=2.2.1",
+]
+description = "Django json field empowered by pydantic"
+dynamic = ["version"]
+keywords = ["django", "pydantic", "django pydantic", "django json", "json schema", "django form"]
+license = {text = "MIT"}
+name = "django-structured-json-field"
+requires-python = ">= 3.6"
+
+[project.readme]
+content-type = "text/markdown"
+file = "README.md"
+
+[project.urls]
+Homepage = "https://github.com/lotrekagency/django-structured-json-field"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages]
+find = {namespaces = false}
+
+[tool.distutils.bdist_wheel]
+universal = true
+
+[tool.semantic_release]
+version_variables = ["setup.py:__version__", "structured/__init__.py:__version__",]
+
+[tool.semantic_release.branches.master]
+match = "master"
+prerelease = false
+
+[tool.semantic_release.branches."next"]
+match = "next"
+prerelease = true
+prerelease_token = "beta"

@@ -1,0 +1,9 @@
+[run]
+omit =
+    */**/__init__.py
+    structured/tests/*
+    structured/admin.py
+    structured/apps.py
+    structured/defaults.py
+[report]
+show_missing = True

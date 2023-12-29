@@ -1,0 +1,1 @@
+# Django Structured JSON Field
