@@ -54,7 +54,7 @@ class StructuredJSONField(JSONField):
 
         return list_data_validator
 
-    def __init__(self, schema: Type['PyDBaseModel'], *args: Any, **kwargs: Any) -> None:
+    def __init__(self, schema: Type["PyDBaseModel"], *args: Any, **kwargs: Any) -> None:
         self.orig_schema = schema
         self.schema = schema
         default = kwargs.get("default", dict)
@@ -80,11 +80,20 @@ class StructuredJSONField(JSONField):
         return isinstance(value, self.orig_schema)
 
     def get_prep_value(
-        self, value: Union[List[Type['PyDBaseModel']], Type['PyDBaseModel']]
+        self, value: Union[List[Type["PyDBaseModel"]], Type["PyDBaseModel"]]
     ) -> str:
         if isinstance(value, list) and self.many:
             return self.schema.dump_json(value, exclude_unset=True).decode()
         return value.model_dump_json(exclude_unset=True)
+
+    # This prevents some random errors in sqlite envs (to be investigated)
+    def get_db_prep_value(
+        self,
+        value: Union[List[Type["PyDBaseModel"]], Type["PyDBaseModel"]],
+        connection: Any,
+        prepared: bool = False,
+    ) -> str:
+        return self.get_prep_value(value)
 
     def from_db_value(self, value: Any, expression: Any, connection: Any) -> Any:
         data = super().from_db_value(value, expression, connection)
