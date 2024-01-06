@@ -6,9 +6,18 @@
     "dev": "rollup -c -w"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
-    "rollup": "^4.9.1"
+    "naive-ui": "^2.36.0",
+    "rollup": "^4.9.1",
+    "rollup-plugin-replace": "^2.2.0",
+    "vfonts": "^0.0.3"
   },
   "dependencies": {
+    "@lljj/vue3-form-naive": "^1.19.1",
+    "ajv-i18n": "^4.2.0",
+    "vue": "^3.4.0"
   }
 }

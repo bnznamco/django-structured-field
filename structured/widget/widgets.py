@@ -22,7 +22,6 @@ class StructuredJSONFormWidget(Widget):
         if self.extra_css:
             css.extend(self.extra_css)
         js = [
-            "js/jsoneditor.js",
             "js/structured-field-form.js",
         ]
         if self.extra_js:
