@@ -5,21 +5,25 @@
     flex-direction: column;
   }
   button {
-    border: none;
+    padding: 3px 12px;
+    background: var(--object-tools-bg);
+    color: var(--object-tools-fg);
     font-weight: 400;
-    background: var(--default-button-bg);
-    padding: 5px 15px;
-    margin: 1px 2px;
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 15px;
     border: none;
-    border-radius: 4px;
-    color: var(--button-fg);
+    margin: 1px 2px;
     cursor: pointer;
-    transition: background 0.15s;
+    &:hover {
+      background-color: var(--object-tools-hover-bg);
+    }
   }
   .je-modal {
     background: var(--body-bg);
   }
 }
-.form-row{
-    overflow: visible !important;
+.form-row {
+  overflow: visible !important;
 }
