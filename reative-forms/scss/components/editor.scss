@@ -23,6 +23,10 @@
   .je-modal {
     background: var(--body-bg);
   }
+  .je-indented-panel {
+    border: 1px solid var(--border-color) !important;
+    background: var(--darkened-bg);
+  }
 }
 .form-row {
   overflow: visible !important;
