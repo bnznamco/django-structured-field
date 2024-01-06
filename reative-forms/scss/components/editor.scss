@@ -22,6 +22,15 @@
   }
   .je-modal {
     background: var(--body-bg);
+    border: 1px solid var(--border-color);
+    background: var(--darkened-bg);
+    box-shadow: none;
+    border-radius: 5px;
+    textarea{
+      background: var(--darkened-bg);
+      border: none;
+      color: var(--body-fg);
+    }
   }
   .je-indented-panel {
     border: 1px solid var(--border-color) !important;
