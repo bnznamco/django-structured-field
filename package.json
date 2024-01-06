@@ -7,8 +7,9 @@
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",
-    "rollup": "^4.9.1"
+    "rollup": "^4.9.1",
+    "rollup-plugin-scss": "^4.0.0",
+    "sass": "^1.69.7"
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }

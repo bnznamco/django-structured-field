@@ -1,4 +1,4 @@
-
+import './scss/main.scss';
 
 function renderForm(element) {
     const schema = JSON.parse(element.dataset.schema);
@@ -9,11 +9,6 @@ function renderForm(element) {
         schema,
         startval: formData,
         max_depth: 10,
-        show_opt_in: true,
-        disable_properties: true,
-        disable_edit_json: true,
-        disable_collapse: true,
-        object_layout: 'table',
     });
     editor.on('change', () => {
         inputTextArea.innerHTML = JSON.stringify(editor.getValue());
@@ -21,6 +16,8 @@ function renderForm(element) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    JSONEditor.defaults.options.theme = 'html';
+    JSONEditor.defaults.options.iconlib = 'fontawesome5';
     const elements = document.querySelectorAll('.structured-field-editor');
     for (let i = 0; i < elements.length; i++) {
         renderForm(elements[i]);

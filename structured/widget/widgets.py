@@ -18,11 +18,14 @@ class StructuredJSONFormWidget(Widget):
 
     @property
     def media(self):
-        css = ["css/structured-field.css"]
+        css = [
+            "css/structured-field-form.min.css",
+            "libs/fontawesome/css/all.min.css",
+        ]
         if self.extra_css:
             css.extend(self.extra_css)
         js = [
-            "js/jsoneditor.js",
+            "libs/jsoneditor/jsoneditor.js",
             "js/structured-field-form.js",
         ]
         if self.extra_js:

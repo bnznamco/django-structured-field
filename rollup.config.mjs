@@ -1,19 +1,25 @@
 import terser from '@rollup/plugin-terser';
+import scss from 'rollup-plugin-scss'
 
 
 export default {
     input: 'reative-forms/main.js',
     output: [
         {
-            file: 'structured/static/js/structured-field-form.js',
-            format: 'iife'
+            format: 'iife',
+            dir: 'structured/static',
+            sourcemap: true,
+            assetFileNames: 'css/structured-field-form.min.css',
+            entryFileNames: 'js/structured-field-form.js'
         },
         {
-            file: 'structured/static/js/structured-field-form.min.js',
+            dir: 'structured/static',
+            entryFileNames: 'js/structured-field-form.min.js',
+            assetFileNames: 'css/structured-field-form.min.css',
             format: 'iife',
-            name: 'version',
             plugins: [terser()]
         }
-    ]
+    ],
+    plugins: [scss({ outputStyle: 'compressed', watch: 'reative-forms/scss/components' })]
 
 };
