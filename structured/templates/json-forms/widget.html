@@ -1,0 +1,12 @@
+<div
+  id='{{ name }}_editor'
+  class='structured-field-editor'
+  data-name='{{ name }}'
+  data-formdata='{{ data|safe }}'
+  data-schema='{{ schema|safe }}'
+  data-uischema='{{ ui_schema|safe }}'
+></div>
+
+<textarea id="id_{{ name }}" name="{{ name }}" style="display: none">
+  {{ data }}
+</textarea>

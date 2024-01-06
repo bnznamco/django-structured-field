@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'structured',
     'tests.app.test_module',
     'django.contrib.admin',
     'django.contrib.auth',

@@ -10,6 +10,8 @@ from pydantic import (
     WrapValidator,
 )
 
+from structured.widget.fields import StructuredJSONFormField
+
 if TYPE_CHECKING:
     from pydantic import BaseModel as PyDBaseModel
     from pydantic.fields import Field
@@ -105,3 +107,12 @@ class StructuredJSONField(JSONField):
         name, path, args, kwargs = super().deconstruct()
         kwargs["schema"] = self.orig_schema
         return name, path, args, kwargs
+
+    def formfield(self, **kwargs):
+        return super().formfield(
+            **{
+                "form_class": StructuredJSONFormField,
+                "schema": self.schema.model_json_schema(),
+                **kwargs,
+            }
+        )

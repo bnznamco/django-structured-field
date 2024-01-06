@@ -53,3 +53,5 @@ MANIFEST
 .conda*/
 .python-version
 *.sqlite3
+
+node_modules

@@ -4,4 +4,4 @@ from django.apps import AppConfig
 
 
 class StructuredConfig(AppConfig):
-    name = "structured-json-field"
+    name = "structured"

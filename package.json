@@ -1,0 +1,14 @@
+{
+  "name": "structured-json-form-field",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w"
+  },
+  "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
+    "rollup": "^4.9.1"
+  },
+  "dependencies": {
+  }
+}
