@@ -1,10 +1,10 @@
-from pydantic import TypeAdapter, ValidationError
+from pydantic import TypeAdapter, ValidationError as PydanticValidationError
 from rest_framework import serializers
 from rest_framework.utils import model_meta
 from typing import TYPE_CHECKING, Any, Union, List
 
 from structured.fields import StructuredJSONField as DjangoStructuredJSONField
-from structured.utils.setter import pointed_setter
+from structured.utils.errors import map_pydantic_errors
 
 
 if TYPE_CHECKING:
@@ -41,13 +41,8 @@ class StructuredJSONField(serializers.JSONField):
     def to_internal_value(self, data: Union[list, dict]):
         try:
             return self.schema.validate_python(super().to_internal_value(data))
-        except ValidationError as e:
-            drf_error: Union[list, dict[str, Any]] = [] if self.many else {}
-            for error in e.errors():
-                pointed_setter(
-                    drf_error, ".".join([str(x) for x in error["loc"]]), [error["msg"]]
-                )
-            raise serializers.ValidationError(drf_error)
+        except PydanticValidationError as e:
+            raise serializers.ValidationError(map_pydantic_errors(e, self.many))
 
 
 class FieldsOverrideMixin:
@@ -65,4 +60,5 @@ class StructuredModelSerializer(FieldsOverrideMixin, serializers.ModelSerializer
     """
     This serializer allows to serialize and deserialize structured data.
     """
+
     pass

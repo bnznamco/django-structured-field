@@ -10,6 +10,7 @@
             schema,
             startval: formData,
             max_depth: 10,
+            show_errors: 'always',
         });
         editor.on('change', () => {
             inputTextArea.innerHTML = JSON.stringify(editor.getValue());

@@ -2,6 +2,7 @@ import json
 from typing import Any, Union, TYPE_CHECKING, Type, List
 
 from django.db.models import JSONField
+from django.core import exceptions
 from django.db.models.query_utils import DeferredAttribute
 from pydantic import (
     TypeAdapter,
@@ -9,8 +10,10 @@ from pydantic import (
     ValidatorFunctionWrapHandler,
     WrapValidator,
 )
-
+from structured.utils.errors import map_pydantic_errors
 from structured.widget.fields import StructuredJSONFormField
+from pydantic import ValidationError as PydanticValidationError
+
 
 if TYPE_CHECKING:
     from pydantic import BaseModel as PyDBaseModel
@@ -39,6 +42,19 @@ class StructuredJSONField(JSONField):
     # TODO: write queries for prefetch related for models inside the field
 
     descriptor_class = StructuredDescriptior
+
+    def validate(self, value, model_instance):
+        try:
+            self.schema.validate_python(value)
+        except PydanticValidationError as e:
+            raise exceptions.ValidationError(
+                self.error_messages["invalid"],
+                code="invalid",
+                params={
+                    "value": value,
+                    "error_detail": map_pydantic_errors(e, self.many),
+                },
+            )
 
     @property
     def list_data_validator(self):
@@ -112,7 +128,7 @@ class StructuredJSONField(JSONField):
         return super().formfield(
             **{
                 "form_class": StructuredJSONFormField,
-                "schema": self.schema.model_json_schema(),
+                "schema": self.schema,
                 **kwargs,
             }
         )

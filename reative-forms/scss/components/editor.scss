@@ -1,8 +1,21 @@
 .structured-field-editor {
   width: 100%;
+  border-radius: 5px;
+  .errmsg {
+    color: var(--error-fg) !important;
+    margin: 7px 2px;
+  }
   .form-control {
     display: flex;
     flex-direction: column;
+    margin-bottom: 10px;
+  }
+  label.je-form-input-label {
+    text-transform: capitalize;
+    &.required::after {
+      content: '*';
+      vertical-align: inherit;
+    }
   }
   button {
     padding: 3px 12px;
@@ -26,7 +39,7 @@
     background: var(--darkened-bg);
     box-shadow: none;
     border-radius: 5px;
-    textarea{
+    textarea {
       background: var(--darkened-bg);
       border: none;
       color: var(--body-fg);
@@ -39,4 +52,13 @@
 }
 .form-row {
   overflow: visible !important;
+}
+
+.errors .structured-field-editor {
+  input,
+  select,
+  textarea {
+    border: 1px solid var(--border-color);
+  }
+  border: 1px solid var(--error-fg);
 }
