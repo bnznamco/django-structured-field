@@ -1,9 +1,8 @@
 from django.forms import ModelForm
-
 from structured.widget.fields import StructuredJSONFormField
 
 
-class ReactJSONSchemaModelForm(ModelForm):
+class StructuredJSONModelForm(ModelForm):
     """
     Provides the instance object of a ModelForm to all of the schema field widgets.
     """
