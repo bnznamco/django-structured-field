@@ -1,4 +1,4 @@
-from typing import Any, Generic
+from typing import Any, ForwardRef, Generic
 from typing_extensions import TypeVar, get_args
 from django.core.exceptions import ImproperlyConfigured
 
@@ -49,7 +49,10 @@ class _LazyType:
 
 def get_type(source: Generic[T], raise_exception=True) -> T:
     try:
-        return get_args(source)[0]
+        subclass = get_args(source)[0]
+        if isinstance(subclass, ForwardRef):
+            return subclass._evaluate(globals(), locals(), frozenset())
+        return subclass
     except IndexError:
         if raise_exception:
             raise ImproperlyConfigured(
