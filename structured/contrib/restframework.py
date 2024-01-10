@@ -1,7 +1,7 @@
 from pydantic import TypeAdapter, ValidationError as PydanticValidationError
 from rest_framework import serializers
 from rest_framework.utils import model_meta
-from typing import TYPE_CHECKING, Any, Union, List
+from typing import TYPE_CHECKING, Union, List
 
 from structured.fields import StructuredJSONField as DjangoStructuredJSONField
 from structured.utils.errors import map_pydantic_errors

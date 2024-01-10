@@ -1,21 +1,27 @@
+from __future__ import annotations
 from typing import Optional
 from django.db import models
 from structured.fields import StructuredJSONField
-from structured.pydantic.fields import ForeignKey
+from structured.pydantic.fields import ForeignKey, QuerySet
 from structured.pydantic.models import BaseModel
 
+class SimpleRelationModel(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self) -> str:
+        return self.name
 
 class TestSchema(BaseModel):
     name: str
     age: int = None
     child: Optional["TestSchema"] = {}
     childs: list["TestSchema"] = []
-
-    # model: "TestModel" = None
+    fk_field: ForeignKey['SimpleRelationModel'] = None
+    qs_field: QuerySet['SimpleRelationModel']
 
 
 def init_schema():
-    TestSchema(name="")
+    return TestSchema(name="")
 
 
 class TestModel(models.Model):
