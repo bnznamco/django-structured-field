@@ -70,7 +70,7 @@ def get_type_eval(source: Generic[T], model: Any, raise_exception=True) -> T:
     return type
 
 
-def find_model_type_from_args(args:List, base_model:Type, model_type:Type):
+def find_model_type_from_args(args: List, base_model: Type, model_type: Type):
     lazy_types = [
         _LazyType(arg).evaluate(base_model) for arg in args if isinstance(arg, str)
     ]
