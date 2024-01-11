@@ -5,7 +5,7 @@ from typing_extensions import get_args, get_origin
 from structured.settings import STRUCTURED_FIELD_CACHE_ENABLED
 from structured.pydantic.fields import ForeignKey, QuerySet
 from structured.pydantic.models import BaseModel
-from structured.utils.typing import _LazyType, get_type
+from structured.utils.typing import find_model_type_from_args, get_type
 from structured.utils.getter import pointed_getter
 from structured.utils.setter import pointed_setter
 from django.db.models import Model as DjangoModel
@@ -63,6 +63,16 @@ class CacheEngine:
     def __init__(self, related_fields: Dict[str, RelInfo]) -> None:
         self.__related_fields__ = related_fields
 
+    @staticmethod
+    def retrieve_missing_valwithcache(instance):
+        for field_name in instance.model_fields_set:
+            val = getattr(instance, field_name, None)
+            if isinstance(val, ValueWithCache):
+                setattr(instance, field_name, val.retrieve())
+            elif isinstance(val, BaseModel):
+                setattr(instance, field_name, CacheEngine.retrieve_missing_valwithcache(val))
+        return instance
+
     @classmethod
     def from_model(cls, model: BaseModel) -> "CacheEngine":
         return cls(related_fields=cls.inspect_related_fields(model))
@@ -85,24 +95,18 @@ class CacheEngine:
                 )
 
             elif isclass(origin) and issubclass(origin, Sequence):
-                lazy_types = [
-                    _LazyType(arg).evaluate(model)
-                    for arg in args
-                    if isinstance(arg, str)
-                ]
-                subclass = next(
-                    (
-                        c
-                        for c in list(args) + lazy_types
-                        if isclass(c) and issubclass(c, BaseModel)
-                    ),
-                    None,
-                )
-                if isclass(subclass) and issubclass(subclass, BaseModel):
+                subclass = find_model_type_from_args(args, model, BaseModel)
+                if subclass:
                     related[field_name] = RelInfo(subclass, RelInfo.RLField, field)
 
             elif isclass(annotation) and issubclass(annotation, BaseModel):
                 related[field_name] = RelInfo(annotation, RelInfo.RIField, field)
+
+            elif origin and origin is Union:
+                subclass = find_model_type_from_args(args, model, BaseModel)
+                if subclass:
+                    related[field_name] = RelInfo(subclass, RelInfo.RIField, field)
+
         return related
 
     def get_all_fk_data(self, data):

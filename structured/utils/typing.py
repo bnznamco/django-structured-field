@@ -1,4 +1,5 @@
-from typing import Any, ForwardRef, Generic
+from inspect import isclass
+from typing import Any, ForwardRef, Generic, Type, List
 from typing_extensions import TypeVar, get_args
 from django.core.exceptions import ImproperlyConfigured
 
@@ -67,3 +68,17 @@ def get_type_eval(source: Generic[T], model: Any, raise_exception=True) -> T:
     if isinstance(type, str):
         return _LazyType(type).evaluate(model)
     return type
+
+
+def find_model_type_from_args(args:List, base_model:Type, model_type:Type):
+    lazy_types = [
+        _LazyType(arg).evaluate(base_model) for arg in args if isinstance(arg, str)
+    ]
+    return next(
+        (
+            c
+            for c in list(args) + lazy_types
+            if isclass(c) and issubclass(c, model_type)
+        ),
+        None,
+    )

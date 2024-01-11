@@ -54,6 +54,8 @@ class ForeignKey(Generic[T]):
             if info.mode == "python":
                 serializer = build_standard_model_serializer(model_class, depth=1)
                 return serializer(instance=instance).data
+            if isinstance(instance, ValueWithCache):
+                return instance.retrieve().pk
             return instance.pk
 
         return cs.json_or_python_schema(

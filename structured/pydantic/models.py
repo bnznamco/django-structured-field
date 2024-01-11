@@ -40,9 +40,10 @@ class BaseModelMeta(pydantic._internal._model_construction.ModelMetaclass):
 
 
 class BaseModel(PyDBaseModel, metaclass=BaseModelMeta):
-    @model_validator(mode="before")
+    @model_validator(mode="wrap")
     @classmethod
-    def build_cache(cls, data: Any) -> Any:
+    def build_cache(cls, data, handler) -> Any:
         from structured.cache.engine import CacheEngine
-
-        return CacheEngine.from_model(cls).inject_cache(data)
+        data = CacheEngine.from_model(cls).inject_cache(data)
+        instance: 'BaseModel' = handler(data)
+        return CacheEngine.retrieve_missing_valwithcache(instance)
