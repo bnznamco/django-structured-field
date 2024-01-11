@@ -20,9 +20,12 @@ class MySchema(BaseModel):
     name: str
     age: int = None
 
+def init_data():
+    return MySchema(name='')
+
 # Create a model with a StructuredJSONField with the schema you defined
 class MyModel(models.Model):
-    structured_data = StructuredJSONField(schema=MySchema, default=dict)
+    structured_data = StructuredJSONField(schema=MySchema, default=init_data)
 
 ```
 
@@ -35,10 +38,13 @@ This field supports relationships between models, you can define them in your sc
 You can define recursive schemas by declaring the attribute type as a string:
 
 ```python
+from typing import Optional, List
+
 class MySchema(BaseModel):
     name: str
     age: int = None
-    parent: 'MySchema' = None
+    parent: Optional['MySchema'] = None
+    relateds: List['MySchema'] = []
 ```
 
 ### Foreign Keys
@@ -46,10 +52,12 @@ class MySchema(BaseModel):
 You can also define model relationships in your schema:
 
 ```python
+from structured.pydantic.fields import ForeignKey
+
 class MySchema(BaseModel):
     name: str
     age: int = None
-    parent: 'MyModel' = None
+    parent: ForeignKey['MyModel'] = None
 ```
 
 This will treat the parent field as a normal django ForeignKey.
