@@ -1,4 +1,4 @@
-from tests.app.test_module.models import SimpleRelationModel, TestModel, TestSchema
+from tests.app.test_module.models import TestModel, TestSchema
 import pytest
 
 
