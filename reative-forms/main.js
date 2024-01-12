@@ -1,4 +1,5 @@
 import './scss/main.scss';
+import { initCallbacks } from './callbacks';
 
 function renderForm(element) {
     const schema = JSON.parse(element.dataset.schema);
@@ -19,6 +20,7 @@ function renderForm(element) {
 document.addEventListener('DOMContentLoaded', () => {
     JSONEditor.defaults.options.theme = 'html';
     JSONEditor.defaults.options.iconlib = 'fontawesome5';
+    initCallbacks();
     const elements = document.querySelectorAll('.structured-field-editor');
     for (let i = 0; i < elements.length; i++) {
         renderForm(elements[i]);

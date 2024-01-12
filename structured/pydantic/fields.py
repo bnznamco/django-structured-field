@@ -1,8 +1,10 @@
 from typing import Any, Callable, Dict, Generic, TypeVar, Union, List
 
 from django.db import models as django_models
-from pydantic import SerializationInfo
+from pydantic import GetJsonSchemaHandler, SerializationInfo
 from pydantic_core import core_schema as cs
+from pydantic.json_schema import JsonSchemaValue
+from structured.utils.pydantic import build_relation_schema_options
 
 from structured.utils.typing import get_type
 
@@ -73,7 +75,18 @@ class ForeignKey(Generic[T]):
             serialization=cs.plain_serializer_function_ser_schema(
                 serialize_data, info_arg=True
             ),
+            metadata={"relation": build_relation_schema_options(model_class)},
         )
+        
+    @classmethod
+    def __get_pydantic_json_schema__(
+        cls, _core_schema: cs.CoreSchema, handler: GetJsonSchemaHandler
+    ) -> JsonSchemaValue:
+        json_schema = handler(cs.str_schema())
+        json_schema.update(_core_schema.get("metadata", {}).get("relation", {}))
+        return json_schema
+
+        
 
 
 class QuerySet(Generic[T]):
