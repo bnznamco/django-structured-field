@@ -4,12 +4,7 @@ import pytest
 
 # Heavy nested TestSchema object with a ForeignKey field hits database only once
 @pytest.mark.django_db
-def test_heavy_nested_foreign_key_field():
-    from django.conf import settings
-    from django.db import connection, reset_queries
-
-    settings.DEBUG = True  # enable debug mode to count db calls
-
+def test_heavy_nested_foreign_key_field(django_assert_num_queries):
     SimpleRelationModel.objects.bulk_create(
         [SimpleRelationModel(name=f"test{i}") for i in range(100)]
     )
@@ -33,32 +28,29 @@ def test_heavy_nested_foreign_key_field():
 
     TestModel.objects.create(title="test", structured_data=data)
 
-    # reset connection queries
-    reset_queries()
-    # get instance from database
-    instance = TestModel.objects.first()
-    assert len(connection.queries) == 1
-    assert instance.structured_data.fk_field.name == "test0"
-    assert instance.structured_data.child.fk_field.name == "test99"
-    assert instance.structured_data.child.child.fk_field.name == "test77"
-    assert instance.structured_data.child.child.child.fk_field.name == "test51"
-    assert instance.structured_data.child.child.child.child.fk_field.name == "test23"
-    assert (
-        instance.structured_data.child.child.child.child.child.fk_field.name == "test10"
-    )
-    assert len(connection.queries) == 2
-
-    settings.DEBUG = False  # disable debug mode
+    with django_assert_num_queries(1):
+        instance = TestModel.objects.first()
+    with django_assert_num_queries(1) as operation:
+        assert instance.structured_data.fk_field.name == "test0"
+        assert instance.structured_data.child.fk_field.name == "test99"
+        assert instance.structured_data.child.child.fk_field.name == "test77"
+        assert instance.structured_data.child.child.child.fk_field.name == "test51"
+        assert (
+            instance.structured_data.child.child.child.child.fk_field.name == "test23"
+        )
+        assert (
+            instance.structured_data.child.child.child.child.child.fk_field.name
+            == "test10"
+        )
+        assert (
+            'SELECT "test_module_simplerelationmodel"'
+            in operation.captured_queries[0]["sql"]
+        )
 
 
 # Heavy nested TestSchema object with a Queryset field hits database only once
 @pytest.mark.django_db
-def test_heavy_nested_queryset_field():
-    from django.conf import settings
-    from django.db import connection, reset_queries
-
-    settings.DEBUG = True  # enable debug mode to count db calls
-
+def test_heavy_nested_queryset_field(django_assert_num_queries):
     SimpleRelationModel.objects.bulk_create(
         [SimpleRelationModel(name=f"test{i}") for i in range(100)]
     )
@@ -84,17 +76,19 @@ def test_heavy_nested_queryset_field():
 
     TestModel.objects.create(title="test", structured_data=data)
 
-    # reset connection queries
-    reset_queries()
-    # get instance from database
-    instance = TestModel.objects.first()
-    assert len(connection.queries) == 1
-    assert instance.structured_data.qs_field.count() == 10
-    assert instance.structured_data.child.qs_field.count() == 10
-    assert instance.structured_data.child.child.qs_field.count() == 10
-    assert instance.structured_data.child.child.child.qs_field.count() == 10
-    assert instance.structured_data.child.child.child.child.qs_field.count() == 10
-    assert instance.structured_data.child.child.child.child.child.qs_field.count() == 10
-    assert len(connection.queries) == 2
-
-    settings.DEBUG = False  # disable debug mode
+    with django_assert_num_queries(1):
+        instance = TestModel.objects.first()
+    with django_assert_num_queries(1) as operation:
+        assert instance.structured_data.qs_field.count() == 10
+        assert instance.structured_data.child.qs_field.count() == 10
+        assert instance.structured_data.child.child.qs_field.count() == 10
+        assert instance.structured_data.child.child.child.qs_field.count() == 10
+        assert instance.structured_data.child.child.child.child.qs_field.count() == 10
+        assert (
+            instance.structured_data.child.child.child.child.child.qs_field.count()
+            == 10
+        )
+        assert (
+            'SELECT "test_module_simplerelationmodel"'
+            in operation.captured_queries[0]["sql"]
+        )
