@@ -20,6 +20,6 @@ export default {
             plugins: [terser()]
         }
     ],
-    plugins: [scss({ outputStyle: 'compressed', watch: 'reative-forms/scss/components' })]
+    plugins: [scss({ outputStyle: 'compressed', watch: 'reactive-forms/scss/components' })]
 
 };
