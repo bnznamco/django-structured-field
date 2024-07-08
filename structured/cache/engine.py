@@ -31,7 +31,7 @@ class ValueWithCache:
 
     def retrieve(self):
         cache = self.cache.get(self.model)
-        if hasattr(self.value, "__iter__"):
+        if hasattr(self.value, "__iter__") and not isinstance(self.value, str):
             qs = self.model.objects.filter(pk__in=self.value)
             setattr(
                 qs,
@@ -126,6 +126,8 @@ class CacheEngine:
         for field_name, info in self.__related_fields__.items():
             if info.type == RelInfo.FKField:
                 value = pointed_getter(data, field_name, None)
+                if isinstance(value, dict):
+                    value = value.get(info.model._meta.pk.attname, None)
                 if value:
                     if isinstance(
                         value, ValueWithCache
