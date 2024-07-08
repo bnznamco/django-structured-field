@@ -3,7 +3,7 @@ import scss from 'rollup-plugin-scss'
 
 
 export default {
-    input: 'reative-forms/main.js',
+    input: 'reactive-forms/main.js',
     output: [
         {
             format: 'iife',
