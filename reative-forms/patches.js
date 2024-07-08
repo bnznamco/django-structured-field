@@ -24,6 +24,7 @@ export function patchSelect2Editor() {
         setValue(value, initial) {
             if (this.schema.type === "relation") {
                 if (this.schema.multiple && Array.isArray(value)) {
+                    if (!value.length) return
                     return this.fetchDataFromAPI(value.map(({ id }) => id)).then(data => {
                         data.forEach(({ id, name }) => { this.forceAddOption(this.typecast(id), name) })
                         super.setValue(value.map(({ id }) => this.typecast(id)), initial)
@@ -59,7 +60,6 @@ export function patchSelect2Editor() {
             if (this.schema.type === "relation") {
                 if (this.schema.multiple && Array.isArray(value)) {
                     value = value.map(val => this.innerUpdateCast(val))
-                    console.log("updateValue", value, this)
                     this.value = value
                     return value
                 }
