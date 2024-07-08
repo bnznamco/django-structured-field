@@ -44,14 +44,15 @@ class StructuredJSONFormWidget(Widget):
     @property
     def media(self):
         css = [
-            "libs/autocomplete/autocomplete.style.css",
+            "libs/select2/select2.style.css",
             "libs/fontawesome/css/all.min.css",
             "css/structured-field-form.min.css",
         ]
         if self.extra_css:
             css.extend(self.extra_css)
         js = [
-            "libs/autocomplete/autocomplete.min.js",
+            "https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js",
+            "libs/select2/select2.min.js",
             "libs/jsoneditor/jsoneditor.js",
             "js/structured-field-form.js",
         ]

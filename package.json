@@ -11,5 +11,7 @@
     "rollup-plugin-scss": "^4.0.0",
     "sass": "^1.69.7"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@json-editor/json-editor": "^2.13.1"
+  }
 }

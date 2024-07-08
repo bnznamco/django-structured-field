@@ -13,7 +13,7 @@
   label.je-form-input-label {
     text-transform: capitalize;
     &.required::after {
-      content: '*';
+      content: "*";
       vertical-align: inherit;
     }
   }
@@ -61,4 +61,14 @@
     border: 1px solid var(--border-color);
   }
   border: 1px solid var(--error-fg);
+}
+
+.select2.select2-container {
+  max-width: 100%;
+}
+.structured-field-editor button.select2-selection__clear {
+  color: #000;
+}
+.select2-container .select2-selection--multiple .select2-selection__rendered {
+  margin-left: 0;
 }
