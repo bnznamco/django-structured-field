@@ -23,7 +23,7 @@ def build_relation_schema_options(model: Type[models.Model], many: bool = False,
         "multiple": many,
         "options": {
             "select2": {
-                "placeholder": "Select an option",
+                "placeholder": "Start writing to search for options" if many else "Select an option",
                 "multiple": many,
                 "allowClear": nullable,
                 "ajax": {
