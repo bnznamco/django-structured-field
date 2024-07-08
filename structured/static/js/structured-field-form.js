@@ -49,6 +49,9 @@
                 if (this.schema.type === "relation") {
                     if (this.schema.multiple && Array.isArray(value)) {
                         if (!value.length) return
+                        if (value.every(val => !isNaN(val))) {
+                            value = value.map(id => ({ id }));
+                        }
                         return this.fetchDataFromAPI(value.map(({ id }) => id)).then(data => {
                             data.forEach(({ id, name }) => { this.forceAddOption(this.typecast(id), name); });
                             super.setValue(value.map(({ id }) => this.typecast(id)), initial);
