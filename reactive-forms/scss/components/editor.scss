@@ -83,6 +83,7 @@
 }
 .select2-container--default .select2-results__option--selected{
   background: var(--selected-bg);
+  border-left: solid 4px var(--body-fg);
 }
 .select2-container--default .select2-selection--single{
   border: 1px solid var(--border-color);
