@@ -1,5 +1,6 @@
 include LICENSE
 include README.md
 recursive-include structured/templates *
+recursive-include structured/static *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
