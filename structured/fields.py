@@ -33,7 +33,8 @@ class StructuredDescriptior(DeferredAttribute):
     def __get__(self, instance, cls=None):
         value = super().__get__(instance, cls)
         if not self.field.check_type(value):
-            return self.field.schema.validate_python(value)
+            value = self.field.schema.validate_python(value)
+            self.__set__(instance, value)
         return value
 
 
