@@ -78,3 +78,33 @@ def test_nested_queryset_field():
     assert instance.structured_data.child.name == "John"
     assert instance.structured_data.child.age == 25
     assert instance.structured_data.child.qs_field.count() == len(names2)
+
+
+# Can edit a QuerySet and save the changes to the database
+@pytest.mark.django_db
+def test_queryset_field_edit():
+    names = ["test1", "test2", "test3", "test4", "test5"]
+    SimpleRelationModel.objects.bulk_create(
+        [SimpleRelationModel(name=name) for name in names]
+    )
+    instance = TestModel.objects.create(
+        title="test",
+        structured_data={
+            "name": "John",
+            "age": 42,
+            "qs_field": SimpleRelationModel.objects.filter(name__in=names),
+        },
+    )
+    assert instance.structured_data.qs_field.count() == len(names)
+    names = ["test62", "test37", "test78"]
+    SimpleRelationModel.objects.bulk_create(
+        [SimpleRelationModel(name=name) for name in names]
+    )
+    instance.structured_data.qs_field = SimpleRelationModel.objects.filter(
+        name__in=names
+    )
+    instance.save()
+    assert instance.structured_data.qs_field.count() == len(names)
+    assert set(instance.structured_data.qs_field.values_list("name", flat=True)) == set(
+        names
+    )
