@@ -132,7 +132,7 @@ class QuerySet(Generic[T]):
             if info.mode == "python":
                 serializer = build_standard_model_serializer(model_class, depth=1)
                 return serializer(instance=qs, many=True).data
-            return [x.pk for x in qs]
+            return [getattr(x, "pk", x) for x in qs]
 
         return cs.json_or_python_schema(
             json_schema=cs.union_schema(
