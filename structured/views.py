@@ -13,14 +13,14 @@ def search(request, model):
         search_term = request.GET.get("_q", None)
         if not search_term:
             return JsonResponse([], safe=False)
-        if search_term == "__all__":
+        elif search_term == "__all__":
             results = model.objects.all()
-        if search_term.startswith("_pk="):
-            pk = search_term.split("_pk=")[1]
+        elif search_term.startswith("_pk="):
+            pk = search_term.split("_pk=", 1)[1]
             if not pk.isdigit():
                 return JsonResponse([], safe=False)
             results = model.objects.filter(pk=pk)
-        if search_term.startswith("_pk__in="):
+        elif search_term.startswith("_pk__in="):
             pks = search_term.split("_pk__in=")[1].split(",")
             results = model.objects.filter(pk__in=[pk for pk in pks if pk.isdigit()])
         else:
