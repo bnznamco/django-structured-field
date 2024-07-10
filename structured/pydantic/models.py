@@ -1,5 +1,5 @@
 from inspect import isclass
-from typing import Any, Dict, Tuple, get_origin, Optional
+from typing import Any, Dict, Tuple, get_origin, Optional, Type
 
 from pydantic._internal._generics import PydanticGenericMetadata
 from pydantic._internal._model_construction import ModelMetaclass
@@ -17,7 +17,7 @@ class BaseModelMeta(ModelMetaclass):
     def __new__(
         mcs,
         cls_name: str,
-        bases: Tuple[type[Any], ...],
+        bases: Tuple[Type[Any], ...],
         namespace: Dict[str, Any],
         __pydantic_generic_metadata__: Optional[PydanticGenericMetadata] = None,
         __pydantic_reset_parent_namespace__: bool = True,
