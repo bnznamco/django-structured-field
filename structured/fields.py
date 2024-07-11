@@ -62,14 +62,11 @@ class StructuredJSONField(JSONField):
         def list_data_validator(
             value: Any, handler: ValidatorFunctionWrapHandler, info: ValidationInfo
         ) -> Any:
-            from structured.cache.engine import CacheEngine
-
-            cache = CacheEngine.from_model(self.orig_schema)
             if info.mode == "json" and isinstance(value, str):
                 return self.schema.validate_python(
-                    cache.inject_cache(json.loads(value))
+                    self.orig_schema._cache_engine.build_cache(json.loads(value))
                 )
-            return handler(cache.inject_cache(value))
+            return handler(self.orig_schema._cache_engine.build_cache(value))
 
         return list_data_validator
 

@@ -1,22 +1,34 @@
+from __future__ import annotations
 from collections import defaultdict
 from inspect import isclass
-from typing import Any, Dict, Sequence, Type
+from typing import Any, Dict, Sequence, Type, TYPE_CHECKING
 from typing_extensions import get_args, get_origin
 from structured.settings import STRUCTURED_FIELD_CACHE_ENABLED
 from structured.pydantic.fields import ForeignKey, QuerySet
-from structured.pydantic.models import BaseModel
 from structured.utils.typing import find_model_type_from_args, get_type
 from structured.utils.getter import pointed_getter
 from structured.utils.setter import pointed_setter
 from django.db.models import Model as DjangoModel
 from typing import Iterable, Union
+from pydantic import model_validator
 
+if TYPE_CHECKING:
+    from structured.pydantic.models import BaseModel
 
 # TODO:
 # ::: Actually this is a first draft.
 # The system should be more type safe.
 # It should handle initialization made with model instance not only dicts
 # Neet to check if there are problems with different formats for pks (model instaces or string or dicts)
+
+
+class CacheEnabledModel:
+    @model_validator(mode="wrap")
+    @classmethod
+    def build_cache(cls, data, handler) -> Any:
+        data = cls._cache_engine.build_cache(data)
+        instance: "BaseModel" = handler(data)
+        return cls._cache_engine.fetch_cache(instance)
 
 
 class Cache(dict):
@@ -64,13 +76,13 @@ class CacheEngine:
         self.__related_fields__ = related_fields
 
     @staticmethod
-    def retrieve_missing_valwithcache(instance):
+    def fetch_cache(instance):
         for field_name in instance.model_fields_set:
             val = getattr(instance, field_name, None)
             if isinstance(val, ValueWithCache):
                 setattr(instance, field_name, val.retrieve())
-            elif isinstance(val, BaseModel):
-                setattr(instance, field_name, CacheEngine.retrieve_missing_valwithcache(val))
+            elif isinstance(val, CacheEnabledModel):
+                setattr(instance, field_name, CacheEngine.fetch_cache(val))
         return instance
 
     @classmethod
@@ -95,15 +107,15 @@ class CacheEngine:
                 )
 
             elif isclass(origin) and issubclass(origin, Sequence):
-                subclass = find_model_type_from_args(args, model, BaseModel)
+                subclass = find_model_type_from_args(args, model, CacheEnabledModel)
                 if subclass:
                     related[field_name] = RelInfo(subclass, RelInfo.RLField, field)
 
-            elif isclass(annotation) and issubclass(annotation, BaseModel):
+            elif isclass(annotation) and issubclass(annotation, CacheEnabledModel):
                 related[field_name] = RelInfo(annotation, RelInfo.RIField, field)
 
             elif origin and origin is Union:
-                subclass = find_model_type_from_args(args, model, BaseModel)
+                subclass = find_model_type_from_args(args, model, CacheEnabledModel)
                 if subclass:
                     related[field_name] = RelInfo(subclass, RelInfo.RIField, field)
 
@@ -178,7 +190,7 @@ class CacheEngine:
                     fk_data[model] += [(f"{field_name}.{t[0]}", t[1]) for t in touples]
         return fk_data
 
-    def inject_cache(self, data: Any) -> Any:
+    def build_cache(self, data: Any) -> Any:
         if not STRUCTURED_FIELD_CACHE_ENABLED:
             return data
         fk_data = self.get_all_fk_data(data)
@@ -208,3 +220,9 @@ class CacheEngine:
             for t in touples:
                 pointed_setter(data, t[0], ValueWithCache(cache, model, t[1]))
         return data
+
+    @classmethod
+    def add_cache_engine_to_class(cls, mdlcls: Type[Any]) -> Type[Any]:
+        cache_instance = cls.from_model(mdlcls)
+        setattr(mdlcls, "_cache_engine", cache_instance)
+        return mdlcls

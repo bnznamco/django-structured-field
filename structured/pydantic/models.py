@@ -9,13 +9,14 @@ from pydantic._internal._generics import PydanticGenericMetadata
 from pydantic._internal._model_construction import ModelMetaclass
 from django.db.models import Model as DjangoModel
 from pydantic import BaseModel as PyDBaseModel
-from pydantic import Field, model_validator
+from pydantic import Field
 from typing_extensions import Annotated
 
 from .fields import ForeignKey, QuerySet
 from structured.utils.typing import get_type
 from structured.utils.pydantic import map_method_aliases
 from abc import ABCMeta
+from structured.cache import CacheEngine, CacheEnabledModel
 
 
 class BaseModelMeta(ModelMetaclass):
@@ -34,7 +35,7 @@ class BaseModelMeta(ModelMetaclass):
             for base_ in base.__mro__:
                 if base_ is PyDBaseModel:
                     break
-                annotations.update(base_.__annotations__)
+                annotations.update(getattr(base_, "__annotations__", {}))
         cls_namespace = BaseModelMeta.__get_class_types_namespace__(
             mcs, cls_name, bases, namespace
         )
@@ -51,7 +52,7 @@ class BaseModelMeta(ModelMetaclass):
                     Field(default_factory=get_type(annotation)._default_manager.none),
                 ]
         namespace["__annotations__"] = annotations
-        return map_method_aliases(
+        new_class = map_method_aliases(
             super().__new__(
                 mcs,
                 cls_name,
@@ -63,6 +64,7 @@ class BaseModelMeta(ModelMetaclass):
                 **kwargs,
             )
         )
+        return CacheEngine.add_cache_engine_to_class(new_class)
 
     @staticmethod
     def __get_class_types_namespace__(
@@ -75,12 +77,5 @@ class BaseModelMeta(ModelMetaclass):
         return get_cls_types_namespace(cls, parent_frame_namespace())
 
 
-class BaseModel(PyDBaseModel, metaclass=BaseModelMeta):
-    @model_validator(mode="wrap")
-    @classmethod
-    def build_cache(cls, data, handler) -> Any:
-        from structured.cache.engine import CacheEngine
-
-        data = CacheEngine.from_model(cls).inject_cache(data)
-        instance: "BaseModel" = handler(data)
-        return CacheEngine.retrieve_missing_valwithcache(instance)
+class BaseModel(CacheEnabledModel, PyDBaseModel, metaclass=BaseModelMeta):
+    pass
