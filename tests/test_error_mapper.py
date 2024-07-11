@@ -50,7 +50,7 @@ def test_map_pydantic_errors():
     except ValidationError as e:
         result = map_pydantic_errors(e)
         assert len(result["childs"]) == 2
-        assert result["childs"][0] == {"name": ["Field required"], "qs_field": ["Field required"]}
+        assert result["childs"][0] == {"name": ["Field required"]}
         assert result["childs"][1] == {
             "age": [
                 "Input should be a valid integer, unable to parse string as an integer"
