@@ -23,6 +23,8 @@ if TYPE_CHECKING:
 
 
 class CacheEnabledModel:
+    _cache_engine: Type[CacheEngine]
+
     @model_validator(mode="wrap")
     @classmethod
     def build_cache(cls, data, handler) -> Any:

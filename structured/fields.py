@@ -16,9 +16,9 @@ from pydantic import ValidationError as PydanticValidationError
 
 
 if TYPE_CHECKING:
-    from pydantic import BaseModel as PyDBaseModel
     from pydantic.fields import Field
     from typing_extensions import Annotated
+    from structured.pydantic.models import BaseModel
 
 
 class StructuredDescriptior(DeferredAttribute):
@@ -70,7 +70,7 @@ class StructuredJSONField(JSONField):
 
         return list_data_validator
 
-    def __init__(self, schema: Type["PyDBaseModel"], *args: Any, **kwargs: Any) -> None:
+    def __init__(self, schema: Type["BaseModel"], *args: Any, **kwargs: Any) -> None:
         self.orig_schema = schema
         self.schema = schema
         default = kwargs.get("default", dict)
@@ -96,7 +96,7 @@ class StructuredJSONField(JSONField):
         return isinstance(value, self.orig_schema)
 
     def get_prep_value(
-        self, value: Union[List[Type["PyDBaseModel"]], Type["PyDBaseModel"]]
+        self, value: Union[List[Type["BaseModel"]], Type["BaseModel"]]
     ) -> str:
         if isinstance(value, list) and self.many:
             return self.schema.dump_json(value, exclude_unset=True).decode()
@@ -105,7 +105,7 @@ class StructuredJSONField(JSONField):
     # This prevents some random errors in sqlite envs (to be investigated)
     def get_db_prep_value(
         self,
-        value: Union[List[Type["PyDBaseModel"]], Type["PyDBaseModel"]],
+        value: Union[List[Type["BaseModel"]], Type["BaseModel"]],
         connection: Any,
         prepared: bool = False,
     ) -> str:
