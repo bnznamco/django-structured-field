@@ -1,5 +1,3 @@
-import json
-
 
 # test map_pydantic_errors function
 def test_map_pydantic_errors():

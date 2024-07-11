@@ -1,10 +1,10 @@
-from tests.app.test_module.models import SimpleRelationModel, TestModel, TestSchema
-import pytest, json
+import pytest
 
 
 # Can create a TestSchema object with a ForeignKey field
 @pytest.mark.django_db
 def test_foreign_key_field():
+    from tests.app.test_module.models import SimpleRelationModel, TestModel, TestSchema
     fk_instance = SimpleRelationModel.objects.create(name="test")
     instance = TestModel.objects.create(
         title="test",
@@ -18,6 +18,7 @@ def test_foreign_key_field():
 # Can create nested TestSchema objects with a ForeignKey field
 @pytest.mark.django_db
 def test_nested_foreign_key_field():
+    from tests.app.test_module.models import SimpleRelationModel, TestModel, TestSchema
     fk_instance1 = SimpleRelationModel.objects.create(name="test1")
     fk_instance2 = SimpleRelationModel.objects.create(name="test2")
     child_data = TestSchema(name="John", age=25, fk_field=fk_instance2)
