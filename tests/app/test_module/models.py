@@ -18,7 +18,7 @@ class TestSchema(BaseModel):
     age: int = None
     child: Optional["TestSchema"] = {}
     childs: List["TestSchema"] = []
-    fk_field: ForeignKey["SimpleRelationModel"] = None
+    fk_field: SimpleRelationModel = None
     qs_field: QuerySet["SimpleRelationModel"]
 
 
