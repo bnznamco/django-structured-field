@@ -3,7 +3,10 @@ from collections import defaultdict
 from inspect import isclass
 from typing import Any, Dict, Sequence, Type, TYPE_CHECKING
 from typing_extensions import get_args, get_origin
-from structured.settings import STRUCTURED_FIELD_CACHE_ENABLED
+from structured.settings import (
+    STRUCTURED_FIELD_CACHE_ENABLED,
+    STRUCTURED_FIELD_SHARED_CACHE,
+)
 from structured.pydantic.fields import ForeignKey, QuerySet
 from structured.utils.typing import find_model_type_from_args, get_type
 from structured.utils.getter import pointed_getter
@@ -230,7 +233,10 @@ class CacheEngine:
                     plainset[model].update(t[1])
                 else:
                     plainset[model].add(t[1])
-        cache = Cache()
+        if STRUCTURED_FIELD_SHARED_CACHE:
+            cache = ThreadSafeCache()
+        else:
+            cache = Cache()
         for model, values in plainset.items():
             models = list(cache.get(model, {}).values())
             pks = []
