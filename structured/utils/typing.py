@@ -52,7 +52,10 @@ def get_type(source: Generic[T], raise_exception=True) -> T:
     try:
         subclass = get_args(source)[0]
         if isinstance(subclass, ForwardRef):
-            return subclass._evaluate(globals(), locals(), frozenset())
+            try:
+                return subclass._evaluate(globals(), locals(), frozenset())
+            except TypeError:
+                return subclass._evaluate(globals(), locals())
         return subclass
     except IndexError:
         if raise_exception:
