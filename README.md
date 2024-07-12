@@ -1,11 +1,11 @@
-# Django Structured JSON Field [![PyPI](https://img.shields.io/pypi/v/django-structured-field?style=flat-square)](https://pypi.org/project/django-structured-field) ![Codecov](https://img.shields.io/codecov/c/github/lotrekagency/django-structured-field?style=flat-square) ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/lotrekagency/django-structured-field/%20%F0%9F%A7%AA%20Test%20and%20Coverage?style=flat-square) [![GitHub](https://img.shields.io/github/license/lotrekagency/django-structured-field?style=flat-square)](./LICENSE)
+# Django Structured JSON Field [![PyPI](https://img.shields.io/pypi/v/django-structured-json-field?style=flat-square)](https://pypi.org/project/django-structured-json-field) ![Codecov](https://img.shields.io/codecov/c/github/lotrekagency/django-structured-field?style=flat-square) ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/lotrekagency/django-structured-field/ci.yml?style=flat-square) [![GitHub](https://img.shields.io/github/license/lotrekagency/django-structured-field?style=flat-square)](./LICENSE)
 
 This is a Django field that allows you to declare the structure of a JSON field and validate it.
 
 ## Installation
 
 ```bash
-pip install django-structured-field
+pip install django-structured-json-field
 ```
 
 ## Usage
