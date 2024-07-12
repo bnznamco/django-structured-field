@@ -57,14 +57,26 @@ from structured.pydantic.fields import ForeignKey
 class MySchema(BaseModel):
     name: str
     age: int = None
-    parent: ForeignKey['MyModel'] = None
+    fk_field: ForeignKey['MyModel'] = None
 ```
 
 This will treat the parent field as a normal django ForeignKey.
 
+
+#### Tip:
+You can omit the `ForeignKey` field and just use the model class as the type annotation:
+```python
+class MySchema(BaseModel):
+    name: str
+    age: int = None
+    fk_field: MyModel = None
+```
+the field will still be treated as a ForeignKey if the type annotation is a subclass of django `models.Model`.
+
+
 ### ManyToMany
 
-If you need a ManyToMany relationship, you can use the `ManyToMany` field:
+If you need a ManyToMany relationship, you can use the `QuerySet` field:
 
 ```python
 from structured.pydantic.fields import QuerySet
@@ -74,10 +86,31 @@ class MySchema(BaseModel):
     age: int = None
     parents: QuerySet['MyModel']
 ```
+`QuerySet` fields will generate a django object manager that will allow you to query the related objects as you would do with a normal django `QuerySet`.
+
+```python
+instance = MySchema(name='test', age=10, parents=MyModel.objects.all())
+# You can filter the queryset
+instance.parents.filter(name='test')
+# You can count the queryset
+instance.parents.count()
+# You can get the first element of the queryset, etc...
+instance.parents.first()
+```
+
 
 ### Cache
 
 To prevent the field from making multiple identical queries a caching technique is used. The cache is still a work in progress, please open an issue if you find any problem.
+Actually the cache covers all the relations inside a StructuredJSONField, optimizing the queries during the serialization process.
+
+#### Cache engine progress:
+- [x] Shared cache between `ForeignKey` fields and `QuerySet` fields
+- [x] Shared cache through nested schemas
+- [x] Shared cache through nested lists of schemas
+- [ ] Shared cache between all `StructuredJSONFields` in the same instance
+- [ ] Shared cache between multiple instances of the same model
+- [ ] Cache invalidation mechanism
 
 
 ## Contributing
