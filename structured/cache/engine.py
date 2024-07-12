@@ -11,6 +11,7 @@ from structured.utils.setter import pointed_setter
 from django.db.models import Model as DjangoModel
 from typing import Iterable, Union
 from pydantic import model_validator
+import threading
 
 if TYPE_CHECKING:
     from structured.pydantic.models import BaseModel
@@ -34,7 +35,33 @@ class CacheEnabledModel:
 
 
 class Cache(dict):
-    pass
+    def flush(self, model=None):
+        if model:
+            if isinstance(model, str):
+                model = next(
+                    (m.__name__ for m in self.keys() if m.__name__ == model), None
+                )
+            if model in self:
+                del self[model]
+        else:
+            self.clear()
+
+
+class ThreadSafeCache(Cache):
+    """
+    It is a singleton cache object that allows sharing cache data between fields and instances.
+    Need to improve data reliability and thread safety.
+    """
+
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls):
+        if cls._instance is None:
+            with cls._lock:
+                if not cls._instance:
+                    cls._instance = super().__new__(cls)
+        return cls._instance
 
 
 class ValueWithCache:
@@ -205,7 +232,7 @@ class CacheEngine:
                     plainset[model].add(t[1])
         cache = Cache()
         for model, values in plainset.items():
-            models = []
+            models = list(cache.get(model, {}).values())
             pks = []
             for value in values:
                 if isinstance(value, model):
