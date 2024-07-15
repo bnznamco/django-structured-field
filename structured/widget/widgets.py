@@ -61,7 +61,7 @@ class StructuredJSONFormWidget(Widget):
         return Media(css={"all": css}, js=js)
 
     def get_editor_schema(self):
-        return order_anyof_allof(self.schema.model_json_schema())
+        return order_anyof_allof(self.schema.json_schema())
 
     def render(self, name, value, attrs=None, renderer=None):
         context = {
