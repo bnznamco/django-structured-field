@@ -13,11 +13,11 @@ from pydantic import (
 from structured.utils.errors import map_pydantic_errors
 from structured.widget.fields import StructuredJSONFormField
 from pydantic import ValidationError as PydanticValidationError
+from typing_extensions import Annotated
+from pydantic.fields import Field
 
 
 if TYPE_CHECKING:
-    from pydantic.fields import Field
-    from typing_extensions import Annotated
     from structured.pydantic.models import BaseModel
 
 
