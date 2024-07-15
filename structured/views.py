@@ -1,6 +1,7 @@
 from django.http import JsonResponse, Http404
 from django.apps import apps
 from django.contrib.admin.views.decorators import staff_member_required
+from django.db import models as django_models
 
 
 @staff_member_required
@@ -24,7 +25,11 @@ def search(request, model):
             pks = search_term.split("_pk__in=")[1].split(",")
             results = model.objects.filter(pk__in=[pk for pk in pks if pk.isdigit()])
         else:
-            results = model.objects.filter(name__icontains=search_term)[:100]
+            search_vector = django_models.Q()
+            for f in model._meta.fields:
+                if isinstance(f, (django_models.CharField, django_models.TextField)):
+                    search_vector |= django_models.Q(**{f"{f.name}__icontains": search_term})
+            results = model.objects.filter(search_vector)[:100]
         return JsonResponse(
             [
                 {"id": r.pk, "name": r.__str__() or f"{model.__name__} ({r.pk})"}
