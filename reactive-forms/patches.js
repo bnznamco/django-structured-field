@@ -9,12 +9,6 @@ export function patchSelect2Editor() {
             super.preBuild()
         }
 
-        async fetchDataFromAPI(value) {
-            value = Array.isArray(value) ? value.join(",") : value
-            const url = `${this.options.select2.ajax.url}?_q=_pk__in=${value}`
-            return await fetch(url).then(res => res.json()).catch(_ => [])
-        }
-
         forceAddOption(value, text) {
             if (this.enum_values.includes(value)) return
             this.enum_values.push(value)
