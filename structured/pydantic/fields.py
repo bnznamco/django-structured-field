@@ -1,12 +1,18 @@
-from typing import Any, Callable, Dict, Generic, TypeVar, Union, List
+from collections import defaultdict
+from typing import Any, Callable, Dict, Generic, TypeVar, Union, List, Type
 
 from django.db import models as django_models
 from pydantic import GetJsonSchemaHandler, SerializationInfo
 from pydantic_core import core_schema as cs
 from pydantic.json_schema import JsonSchemaValue
 from structured.utils.pydantic import build_relation_schema_options
-
+from structured.utils.serializer import (
+    build_standard_model_serializer,
+    minimal_serialization,
+    minimal_list_serialization,
+)
 from structured.utils.typing import get_type
+from django.apps import apps
 
 
 T = TypeVar("T", bound=django_models.Model)
@@ -20,8 +26,15 @@ class ForeignKey(Generic[T]):
         from structured.cache.engine import ValueWithCache
 
         model_class = get_type(source)
+        is_abstract = getattr(model_class._meta, "abstract", False)
 
-        def validate_from_pk(pk: Union[int, str]) -> model_class:
+        def validate_from_pk(
+            pk: Union[int, str], model_class=model_class
+        ) -> Type[django_models.Model]:
+            if is_abstract:
+                raise ValueError(
+                    "Cannot retrieve abstract models from primary key only."
+                )
             return model_class._default_manager.get(pk=pk)
 
         int_str_union = cs.union_schema([cs.str_schema(), cs.int_schema()])
@@ -31,14 +44,19 @@ class ForeignKey(Generic[T]):
                 cs.no_info_plain_validator_function(validate_from_pk),
             ]
         )
-        pk_attname = model_class._meta.pk.attname
 
-        def validate_from_dict(data: Dict[str, Union[str, int]]) -> model_class:
-            return validate_from_pk(data[pk_attname])
+        def validate_from_dict(
+            data: Dict[str, Union[str, int]]
+        ) -> Type[django_models.Model]:
+            if is_abstract:
+                pk_attname = apps.get_model(*data["model"])._meta.pk.attname
+            else:
+                pk_attname = model_class._meta.pk.attname
+            return data and validate_from_pk(data[pk_attname], model_class)
 
         from_dict_schema = cs.chain_schema(
             [
-                cs.typed_dict_schema({pk_attname: cs.typed_dict_field(int_str_union)}),
+                # cs.typed_dict_schema({pk_attname: cs.typed_dict_field(int_str_union)}),
                 cs.no_info_plain_validator_function(validate_from_dict),
             ]
         )
@@ -51,14 +69,12 @@ class ForeignKey(Generic[T]):
         )
 
         def serialize_data(instance, info):
-            from structured.utils.serializer import build_standard_model_serializer
-
             if info.mode == "python":
                 serializer = build_standard_model_serializer(model_class, depth=1)
                 return serializer(instance=instance).data
             if isinstance(instance, ValueWithCache):
-                return instance.retrieve().pk
-            return instance.pk
+                instance = instance.retrieve()
+            return minimal_serialization(instance)
 
         return cs.json_or_python_schema(
             json_schema=cs.union_schema(
@@ -94,15 +110,22 @@ class QuerySet(Generic[T]):
     ) -> cs.CoreSchema:
         from structured.cache.engine import ValueWithCache
 
-        model_class = get_type(source)
+        def get_mclass() -> Type[django_models.Model]:
+            return get_type(source)
+
+        is_abstract = getattr(get_mclass()._meta, "abstract", False)
 
         def validate_from_pk_list(
             values: List[Union[int, str]]
         ) -> django_models.QuerySet:
+            if is_abstract:
+                raise ValueError(
+                    "Cannot retrieve abstract models from primary key only."
+                )
             preserved = django_models.Case(
                 *[django_models.When(pk=pk, then=pos) for pos, pk in enumerate(values)]
             )
-            return model_class._default_manager.filter(pk__in=values).order_by(
+            return get_mclass()._default_manager.filter(pk__in=values).order_by(
                 preserved
             )
 
@@ -113,12 +136,25 @@ class QuerySet(Generic[T]):
                 cs.no_info_plain_validator_function(validate_from_pk_list),
             ]
         )
-        pk_attname = model_class._meta.pk.attname
+        pk_attname = get_mclass()._meta.pk.attname
 
         def validate_from_dict(
             values: List[Dict[str, Union[str, int]]]
         ) -> django_models.QuerySet:
-            return validate_from_pk_list([data[pk_attname] for data in values])
+            if not is_abstract:
+                pk_attname = get_mclass()._meta.pk.attname
+                return validate_from_pk_list([data[pk_attname] for data in values])
+            stack = defaultdict(list)
+            for value in values:
+                mclass = apps.get_model(*value["model"])
+                pk_attname = mclass._meta.pk.attname
+                stack[mclass].append(value[pk_attname])
+            return django_models.QuerySet.union(
+                *[
+                    mclass._default_manager.filter(pk__in=stack[mclass])
+                    for mclass in stack
+                ]
+            )
 
         from_dict_list_schema = cs.chain_schema(
             [
@@ -138,12 +174,10 @@ class QuerySet(Generic[T]):
         )
 
         def serialize_data(qs: django_models.QuerySet, info: SerializationInfo):
-            from structured.utils.serializer import build_standard_model_serializer
-
             if info.mode == "python":
-                serializer = build_standard_model_serializer(model_class, depth=1)
+                serializer = build_standard_model_serializer(get_mclass(), depth=1)
                 return serializer(instance=qs, many=True).data
-            return [getattr(x, "pk", x) for x in qs]
+            return minimal_list_serialization(qs)
 
         return cs.json_or_python_schema(
             json_schema=cs.union_schema(
@@ -161,7 +195,7 @@ class QuerySet(Generic[T]):
                 serialize_data, info_arg=True
             ),
             metadata={
-                "relation": build_relation_schema_options(model_class, many=True)
+                "relation": build_relation_schema_options(get_mclass(), many=True)
             },
         )
 

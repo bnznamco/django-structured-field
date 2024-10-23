@@ -9,7 +9,7 @@ export function initCallbacks() {
               },
             "processResultData": function (_editor, data, params) {
                 return {
-                    results: data.map(item =>  ({id: item.id, text: item.name})),
+                    results: data.map(item =>  ({id: btoa(JSON.stringify(item)), text: item.name})),
                     pagination: {
                         more: false
                     }

@@ -1,5 +1,6 @@
-from typing import Optional, Sequence, Union, Type, Tuple
+from typing import Optional, Sequence, Union, Type, Tuple, Dict, List
 from rest_framework import serializers
+from django.db import models as django_models
 
 
 def build_standard_model_serializer(
@@ -21,3 +22,23 @@ def build_standard_model_serializer(
             )
         },
     )
+
+
+def minimal_serialization(
+    instance: Type[django_models.Model],
+) -> Dict[str, Union[str, int]]:
+    return (
+        {
+            "id": instance.pk,
+            "name": instance.__str__(),
+            "model": f"{instance._meta.app_label}.{instance._meta.model_name}",
+        }
+        if instance
+        else None
+    )
+
+
+def minimal_list_serialization(
+    instances: List[Type[django_models.Model]],
+) -> List[Dict[str, Union[str, int]]]:
+    return [minimal_serialization(instance) for instance in instances]

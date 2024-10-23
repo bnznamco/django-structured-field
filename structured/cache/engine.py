@@ -15,6 +15,7 @@ from django.db.models import Model as DjangoModel
 from typing import Iterable, Union
 from pydantic import model_validator
 import threading
+from django.apps import apps
 
 if TYPE_CHECKING:
     from structured.pydantic.models import BaseModel
@@ -163,6 +164,7 @@ class CacheEngine:
             return fk_data
         return self.get_fk_data(data)
 
+    # flake8: noqa: C901
     def get_fk_data(self, data):
         fk_data = defaultdict(list)
         if not data:
@@ -170,6 +172,18 @@ class CacheEngine:
         for field_name, info in self.__related_fields__.items():
             if info.type == RelInfo.FKField:
                 value = pointed_getter(data, field_name, None)
+                if info.model._meta.abstract:
+                    if isinstance(value, dict) and "model" in value:
+                        info.model = apps.get_model(*value["model"].split("."))
+                    if isinstance(value, DjangoModel) and not value._meta.abstract:
+                        info.model = value.__class__
+                        value = value.pk
+                    elif isinstance(value, int) or isinstance(value, str) and value.isnumeric():
+                        raise ValueError(
+                            "Cannot retrieve abstract models from primary key only."
+                        )
+                if isinstance(value, DjangoModel):
+                    value = value.pk
                 if isinstance(value, dict):
                     value = value.get(info.model._meta.pk.attname, None)
                 if value:
@@ -178,10 +192,13 @@ class CacheEngine:
                     ):  # needed to break recursive cache builds
                         fk_data = {}
                         break
+                    attname = ""
+                    if not info.model._meta.abstract:
+                        attname = info.model._meta.pk.attname
                     fk_data[info.model].append(
                         (
                             field_name,
-                            pointed_getter(value, info.model._meta.pk.attname, value),
+                            pointed_getter(value, attname, value),
                         )
                     )
             elif info.type == RelInfo.QSField:
