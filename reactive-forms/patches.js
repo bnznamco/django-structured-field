@@ -73,13 +73,28 @@ export function patchSelect2Editor() {
                 }
                 else if (this.isb64RelationObject(value)) {
                     value = this.decodeB64Object(value)
-                    this.setValue(value, initial)
+                    return this.setValue(value, initial)
                 } else if (this.isJSONString(value)) {
                     value = JSON.parse(value)
-                    this.setValue(value, initial)
+                    return this.setValue(value, initial)
                 }
             }
-            super.setValue(value, initial)
+            return super.setValue(value, initial)
+        }
+
+        typecast(value) {
+            if (this.schema.type === "relation" && this.schema.options.select2.allowClear && value === null) {
+                return null
+            }
+            return super.typecast(value)
+        }
+        
+        updateValue(value) {
+            if (this.schema.type === "relation" && this.schema.options.select2.allowClear && value === null) {
+                this.value = null
+                return null
+            }
+            return super.updateValue(value)
         }
 
         getValue() {
