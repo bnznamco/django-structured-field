@@ -35,6 +35,7 @@
 
             forceAddOption(value, text) {
                 if (this.enum_values.includes(value)) return
+                this.schema.enum.push(value);
                 this.enum_values.push(value);
                 this.enum_options.push(value);
                 this.enum_display.push(text);
@@ -77,69 +78,77 @@
                 return this.isb64RelationObject(x) ? JSON.parse(atob(x)) : x
             }
 
-            setValue(value, initial) {
-                if (this.schema.type === "relation") {
-                    if (this.schema.multiple && Array.isArray(value)) {
-                        if (!value.length) return
-                        value.forEach((val) => {
-                            if (this.isb64RelationObject(val)) {
-                                val = this.decodeB64Object(val);
-                            }
-                            let name = val[this.titleFieldsPriority.find(field => val[field])];
-                            this.forceAddOption(JSON.stringify(val), name);
-                        });
-                        return super.setValue(value.map(val => JSON.stringify(val)), initial)
-                    }
-                    else if (this.isRelationObject(value)) {
-                        let name = value[this.titleFieldsPriority.find(field => value[field])];
-                        this.forceAddOption(JSON.stringify(value), name);
-                        return super.setValue(JSON.stringify(value), initial)
-                    }
-                    else if (this.isb64RelationObject(value)) {
-                        value = this.decodeB64Object(value);
-                        return this.setValue(value, initial)
-                    } else if (this.isJSONString(value)) {
-                        value = JSON.parse(value);
-                        return this.setValue(value, initial)
-                    }
+            deserializeRelValue(value) {
+                if (this.schema.multiple && Array.isArray(value)) {
+                    return value.map(val => this.deserializeRelValue(val))
                 }
-                return super.setValue(value, initial)
+                else if (this.isRelationObject(value)) {
+                    return value
+                }
+                else if (this.isJSONString(value)) {
+                    return JSON.parse(value)
+                }
+                else if (this.isb64RelationObject(value)) {
+                    return this.decodeB64Object(value)
+                }
+                return value
+            }
+
+            serializeRelValue(value) {
+                if (this.schema.multiple && Array.isArray(value)) {
+                    return value.map(val => this.serializeRelValue(val))
+                }
+                else if (this.isRelationObject(value)) {
+                    let name = value[this.titleFieldsPriority.find(field => value[field])];
+                    let serialized = JSON.stringify(value);
+                    this.forceAddOption(serialized, name);
+                    return serialized
+                }
+                else if (this.isJSONString(value)) {
+                    return this.serializeRelValue(JSON.parse(value))
+                } else if (this.isb64RelationObject(value)) {
+                    return value
+                }
+                return value
             }
 
             typecast(value) {
-                if (this.schema.type === "relation" && this.schema.options.select2.allowClear && value === null) {
-                    return null
+                if (this.schema.type === "relation") {
+                    if (this.schema.multiple && Array.isArray(value)) {
+                        return value.map(val => val && this.serializeRelValue(val))
+                    } else if (this.schema.options.select2.allowClear && value === null){
+                        return null
+                    }
                 }
                 return super.typecast(value)
             }
-            
             updateValue(value) {
-                if (this.schema.type === "relation" && this.schema.options.select2.allowClear && value === null) {
-                    this.value = null;
-                    return null
+                if (this.schema.type === "relation") {
+                    if (this.schema.options.select2.allowClear && value === null) {
+                        this.value = null;
+                        return this.value
+                    }
+                    this.value = this.serializeRelValue(value);
+                    return this.value
                 }
                 return super.updateValue(value)
             }
 
             getValue() {
                 if (this.schema.type === "relation") {
-                    if (!this.dependenciesFulfilled) {
-                        return undefined
-                    }
-                    if (this.schema.multiple) {
-                        return this.isArray(this.value) ? this.value?.map(val => this.typecast(val)) : this.value ? [this.typecast(this.value)] : []
-                    }
-                    else if (this.isb64RelationObject(this.value)) {
-                        return this.decodeB64Object(this.value)
-                    }
-                    else if (this.isRelationObject(this.value)) {
-                        return this.value
-                    } else if (this.isJSONString(this.value)) {
-                        return JSON.parse(this.value)
-                    }
-                    return this.typecast(this.value)
+                    return this.deserializeRelValue(this.value)
                 }
                 return super.getValue()
+            }
+
+            async setValue(value, initial) {
+                if (this.schema.type === "relation") {
+                    value = this.updateValue(value);
+                }
+                while (!this.select2_instance){
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                return super.setValue(value, initial)
             }
 
             afterInputReady() {
