@@ -2,6 +2,43 @@
 
 
 
+## v0.2.0 (2024-10-26)
+
+### Chore
+
+* chore: update ci testing codecov upload ([`593947d`](https://github.com/lotrekagency/django-structured-field/commit/593947dbbf3df86770b59cf8f6db7bd5f70ef303))
+
+### Documentation
+
+* docs: update readme admin and restframework integrations ([`d4f84d8`](https://github.com/lotrekagency/django-structured-field/commit/d4f84d82301dad3affe5e6e10ca07b7b93f0d2f0))
+
+* docs: update readme shields ([`68f363a`](https://github.com/lotrekagency/django-structured-field/commit/68f363aae9f5ac7e23f0197baaf7c38263db1b7f))
+
+### Feature
+
+* feat(admin): added compatibility for Queryset field in admin ([`5cc6aa2`](https://github.com/lotrekagency/django-structured-field/commit/5cc6aa2ddf59010a25c7f5116cb9bcbcbe769456))
+
+* feat(admin): make relations nullable in json-form schema ([`3763192`](https://github.com/lotrekagency/django-structured-field/commit/376319254ad00f9e03e9b403c0adc202ba6c600a))
+
+* feat(core): added compatibility with abstract model relations ([`8e0d6c1`](https://github.com/lotrekagency/django-structured-field/commit/8e0d6c1f6efaf3a979642b63fee59ae369e97a62))
+
+* feat(admin): better search capabilities for admin panel ([`a782592`](https://github.com/lotrekagency/django-structured-field/commit/a782592eb19dd39c600c9021f96c00e478fc3b7a))
+
+### Fix
+
+* fix(admin): fix widget wrong method alias &#39;model_json_schema&#39; ([`028dae9`](https://github.com/lotrekagency/django-structured-field/commit/028dae94282b0492d8221f5b978d87b63efd9d30))
+
+* fix(field): fix structured field typing annotations import ([`de088ac`](https://github.com/lotrekagency/django-structured-field/commit/de088ac02a4dac5bae7dd462f09bdb5abdb75634))
+
+### Refactor
+
+* refactor(admin): remove unused js ([`86b5a38`](https://github.com/lotrekagency/django-structured-field/commit/86b5a38ce86bd3b5d78ec1b34a7549211fd5c66b))
+
+### Unknown
+
+* deps(jsoneditor): update jsoneditor version ([`8ecf724`](https://github.com/lotrekagency/django-structured-field/commit/8ecf724e603072b274a7eaa2a06e7020407472ae))
+
+
 ## v0.1.0 (2024-07-12)
 
 ### Chore
