@@ -42,10 +42,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@json-editor/json-editor@^2.13.1":
-  version "2.13.1"
-  resolved "https://registry.yarnpkg.com/@json-editor/json-editor/-/json-editor-2.13.1.tgz#fa97b59e0959ee1f38ac6757db9d3b3ee37decb0"
-  integrity sha512-x7pDmJGFNQrM+QXAIRtpK8bZzTNbmWMqpTfYQPLQQRobv/lQaRLMJtKEJJTRFMEZu/pl3btmQNpNT0SRPJJ3IA==
+"@json-editor/json-editor@^2.15.2":
+  version "2.15.2"
+  resolved "https://registry.yarnpkg.com/@json-editor/json-editor/-/json-editor-2.15.2.tgz#a6081207b5074e24bb2f4fcb3d93553d24cab66a"
+  integrity sha512-vUQ7Oy+7VfNIzu6irtPz5qfHbMNTlQWUbHJ7eunxFza+SBwUXfq2Uh5QYD2d6hLDhF22sYh8DPpLWFixQrt1+Q==
   dependencies:
     core-js "^3.27.2"
 
