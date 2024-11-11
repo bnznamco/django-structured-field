@@ -42,6 +42,15 @@
                 this.theme.setSelectOptions(this.input, this.enum_options, this.enum_display);
             }
 
+            isRelation() {
+                return this.schema.type === "relation"
+            }
+            isManyRelation(value = []) {
+                return this.isRelation() && this.schema.multiple && Array.isArray(value)
+            }
+            isClearable(value = null) {
+                return this.isRelation() && this.schema.options.select2.allowClear && value === null
+            }
             isObject(x) {
                 return typeof x === 'object' && !Array.isArray(x) && x !== null
             }
@@ -79,8 +88,8 @@
             }
 
             deserializeRelValue(value) {
-                if (this.schema.multiple && Array.isArray(value)) {
-                    return value.map(val => this.deserializeRelValue(val))
+                if (this.isManyRelation(value)) {
+                    return value && value.map(val => this.deserializeRelValue(val))
                 }
                 else if (this.isRelationObject(value)) {
                     return value
@@ -95,7 +104,7 @@
             }
 
             serializeRelValue(value) {
-                if (this.schema.multiple && Array.isArray(value)) {
+                if (this.isManyRelation(value)) {
                     return value.map(val => this.serializeRelValue(val))
                 }
                 else if (this.isRelationObject(value)) {
@@ -113,18 +122,19 @@
             }
 
             typecast(value) {
-                if (this.schema.type === "relation") {
-                    if (this.schema.multiple && Array.isArray(value)) {
+                if (this.isRelation()) {
+                    if (this.isManyRelation(value)) {
                         return value.map(val => val && this.serializeRelValue(val))
-                    } else if (this.schema.options.select2.allowClear && value === null){
+                    } else if (this.isClearable(value)) {
                         return null
                     }
                 }
                 return super.typecast(value)
             }
+
             updateValue(value) {
-                if (this.schema.type === "relation") {
-                    if (this.schema.options.select2.allowClear && value === null) {
+                if (this.isRelation()) {
+                    if (this.isClearable(value)) {
                         this.value = null;
                         return this.value
                     }
@@ -135,25 +145,25 @@
             }
 
             getValue() {
-                if (this.schema.type === "relation") {
+                if (this.isRelation()) {
                     return this.deserializeRelValue(this.value)
                 }
                 return super.getValue()
             }
 
             async setValue(value, initial) {
-                if (this.schema.type === "relation") {
+                if (this.isRelation()) {
                     value = this.updateValue(value);
-                }
-                while (!this.select2_instance){
-                    await new Promise(resolve => setTimeout(resolve, 100));
+                    while (!this.select2_instance) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
                 }
                 return super.setValue(value, initial)
             }
 
             afterInputReady() {
                 super.afterInputReady();
-                if (this.schema.type === "relation") {
+                if (this.isRelation()) {
                     this.newEnumAllowed = true;
                     this.control?.querySelector('.select2-container')?.removeAttribute('style');
                 }

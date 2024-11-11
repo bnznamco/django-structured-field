@@ -65,7 +65,7 @@ export function patchSelect2Editor() {
 
         deserializeRelValue(value) {
             if (this.isManyRelation(value)) {
-                return value.map(val => this.deserializeRelValue(val))
+                return value && value.map(val => this.deserializeRelValue(val))
             }
             else if (this.isRelationObject(value)) {
                 return value
