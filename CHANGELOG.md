@@ -2,6 +2,13 @@
 
 
 
+## v0.2.1 (2024-11-15)
+
+### Fix
+
+* fix(admin): fix m2m empty value ([`99c0404`](https://github.com/lotrekagency/django-structured-field/commit/99c04046c0913cac341c46548c651129bae9c471))
+
+
 ## v0.2.0 (2024-10-26)
 
 ### Chore
