@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, ForwardRef, get_origin, get_args
 from structured.pydantic.fields import ForeignKey, QuerySet
 from django.db.models import Model as DjangoModel
+from django.db.models.query import QuerySet as DjangoQuerySet
 from pydantic._internal._typing_extra import eval_type_lenient
 from inspect import isclass
 from structured.utils.typing import get_type
@@ -16,21 +17,25 @@ def patch_annotation(annotation: Any, cls_namespace: Dict[str, Any]) -> Any:
     if origin == ForwardRef:
         return patch_annotation(eval_type_lenient(annotation, cls_namespace), cls_namespace)
     elif isclass(origin) and issubclass(origin, ForeignKey):
-        return ForeignKey[patch_annotation(args[0], cls_namespace)]
-    elif isclass(annotation) and issubclass(annotation, DjangoModel):
-        return ForeignKey[annotation]
+        return annotation
     elif isclass(origin) and issubclass(origin, QuerySet):
+        model = get_type(annotation)
+        default_manager = getattr(model, "_default_manager", DjangoQuerySet[model]) or DjangoQuerySet[model]
         return Annotated[
             annotation,
-            Field(default_factory=get_type(annotation)._default_manager.none),
+            Field(default_factory=default_manager.none),
         ]
+    elif isclass(annotation) and issubclass(annotation, DjangoModel):
+        return ForeignKey[annotation]
     elif len(args) > 0 and origin is not None and origin != type:
-        new_args = []
+        new_args = set()
         for arg in args:
-            new_args.append(patch_annotation(arg, cls_namespace))
+            new_args.add(patch_annotation(arg, cls_namespace))
         args = tuple(new_args)
-        if isclass(origin) and issubclass(origin, list):
-            return List[args]
+        if origin is list:
+            origin = List
+        elif origin is dict:
+            origin = Dict
         return origin[args]
     return annotation
 
