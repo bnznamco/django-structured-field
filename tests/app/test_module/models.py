@@ -6,6 +6,27 @@ from structured.pydantic.fields import ForeignKey, QuerySet
 from structured.pydantic.models import BaseModel
 
 
+class AbstractModel(models.Model):
+    common_field = models.CharField(max_length=255)
+
+    class Meta:
+        abstract = True
+
+
+class ChildModel1(AbstractModel):
+    child_field = models.CharField(max_length=255)
+
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__}({self.pk}) - {self.common_field}"
+
+
+class ChildModel2(AbstractModel):
+    child_field = models.CharField(max_length=255)
+
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__}({self.pk}) - {self.common_field}"
+
+
 class SimpleRelationModel(models.Model):
     name = models.CharField(max_length=255)
 
@@ -20,6 +41,7 @@ class TestSchema(BaseModel):
     childs: List["TestSchema"] = []
     fk_field: SimpleRelationModel = None
     qs_field: QuerySet[SimpleRelationModel]
+    abstract_fk: ForeignKey[AbstractModel] = None
 
 
 def init_schema():

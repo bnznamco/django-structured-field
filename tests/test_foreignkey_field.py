@@ -30,3 +30,27 @@ def test_nested_foreign_key_field():
     assert instance.structured_data.child.name == "John"
     assert instance.structured_data.child.age == 25
     assert instance.structured_data.child.fk_field == fk_instance2
+
+
+@pytest.mark.django_db
+def test_abstract_foreign_key_field():
+    from tests.app.test_module.models import ChildModel1, ChildModel2, TestModel, TestSchema
+    instance1 = ChildModel1.objects.create(common_field="test1", child_field="test2")
+    instance2 = ChildModel2.objects.create(common_field="test3", child_field="test4")
+    data = TestSchema(name="Alice", age=10, abstract_fk=instance1)
+    instance = TestModel.objects.create(title="test", structured_data=data)
+    assert instance.structured_data.name == "Alice"
+    assert instance.structured_data.age == 10
+    assert instance.structured_data.abstract_fk == instance1
+    instance.structured_data.abstract_fk = instance2
+    assert instance.structured_data.abstract_fk == instance2
+    instance.save()
+    instance.refresh_from_db()
+    assert instance.structured_data.abstract_fk == instance2
+    assert instance.structured_data.abstract_fk.common_field == "test3"
+    assert instance.structured_data.abstract_fk.child_field == "test4"
+    instance.structured_data.abstract_fk = None
+    instance.save()
+    instance.refresh_from_db()
+    assert instance.structured_data.abstract_fk is None
+    
