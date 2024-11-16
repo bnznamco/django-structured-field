@@ -51,9 +51,8 @@ class ForeignKey(Generic[T]):
             if data is None:
                 return None
             if is_abstract:
-                pk_attname = apps.get_model(*data["model"])._meta.pk.attname
-            else:
-                pk_attname = model_class._meta.pk.attname
+                model_class = apps.get_model(*data["model"])
+            pk_attname = model_class._meta.pk.attname
             return validate_from_pk(data[pk_attname], model_class)
 
         from_dict_schema = cs.chain_schema(

@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 
 
 class CacheEnabledModel:
-    _cache_engine: Type[CacheEngine]
+    _cache_engine: CacheEngine
 
     @model_validator(mode="wrap")
     @classmethod
@@ -177,14 +177,15 @@ class CacheEngine:
                         info.model = apps.get_model(*value["model"].split("."))
                     if isinstance(value, DjangoModel) and not value._meta.abstract:
                         info.model = value.__class__
-                        value = value.pk
                     elif isinstance(value, int) or isinstance(value, str) and value.isnumeric():
                         raise ValueError(
                             "Cannot retrieve abstract models from primary key only."
                         )
                 if isinstance(value, DjangoModel):
+                    info.model = value.__class__
                     value = value.pk
                 if isinstance(value, dict):
+                    info.model = apps.get_model(*value["model"].split("."))
                     value = value.get(info.model._meta.pk.attname, None)
                 if value:
                     if isinstance(
