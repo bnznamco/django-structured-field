@@ -5,7 +5,7 @@ from django.db import models as django_models
 from pydantic import GetJsonSchemaHandler, SerializationInfo
 from pydantic_core import core_schema as cs
 from pydantic.json_schema import JsonSchemaValue
-from structured.utils.pydantic import build_relation_schema_options
+from structured.utils.options import build_relation_schema_options
 from structured.utils.serializer import (
     build_standard_model_serializer,
     minimal_serialization,

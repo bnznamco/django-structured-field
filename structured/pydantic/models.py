@@ -1,20 +1,12 @@
-from inspect import isclass
-from typing import Any, Dict, Tuple, get_origin, Optional, Type
+from typing import Any, Dict, Tuple, Optional, Type
 from pydantic._internal._typing_extra import (
     get_cls_types_namespace,
     parent_frame_namespace,
-    eval_type_lenient,
 )
 from pydantic._internal._generics import PydanticGenericMetadata
 from pydantic._internal._model_construction import ModelMetaclass
-from django.db.models import Model as DjangoModel
 from pydantic import BaseModel as PyDBaseModel
-from pydantic import Field
-from typing_extensions import Annotated
-
-from .fields import ForeignKey, QuerySet
-from structured.utils.typing import get_type
-from structured.utils.pydantic import map_method_aliases
+from structured.utils.pydantic import map_method_aliases, patch_annotation
 from abc import ABCMeta
 from structured.cache import CacheEngine, CacheEnabledModel
 
@@ -40,17 +32,7 @@ class BaseModelMeta(ModelMetaclass):
             mcs, cls_name, bases, namespace
         )
         for field in annotations:
-            annotation = annotations[field]
-            if isinstance(annotation, str):
-                annotation = eval_type_lenient(annotation, cls_namespace)
-            origin = get_origin(annotation)
-            if isclass(annotation) and issubclass(annotation, DjangoModel):
-                annotations[field] = ForeignKey[annotation]
-            elif isclass(origin) and issubclass(origin, QuerySet):
-                annotations[field] = Annotated[
-                    annotation,
-                    Field(default_factory=get_type(annotation)._default_manager.none),
-                ]
+            annotations[field] = patch_annotation(annotations[field], cls_namespace)
         namespace["__annotations__"] = annotations
         new_class = map_method_aliases(
             super().__new__(
