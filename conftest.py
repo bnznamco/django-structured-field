@@ -23,9 +23,9 @@ def django_db_setup(django_db_blocker):
 def setting_fixture(request):
     """Fixture to dynamically adjust settings based on parameter."""
     if request.param == "cache_enabled":
-         settings.STRUCTURED_FIELD = {"CACHE": {"ENABLED": True}}
+         settings.STRUCTURED_FIELD = {"CACHE": {"SHARED": False, "ENABLED": True}}
     elif request.param == "cache_disabled":
-        settings.STRUCTURED_FIELD = {"CACHE": {"ENABLED": False}}
+        settings.STRUCTURED_FIELD = {"CACHE": {"SHARED": False, "ENABLED": False}}
     elif request.param == "shared_cache":
         settings.STRUCTURED_FIELD = {"CACHE": {"SHARED": True, "ENABLED": True}}
     yield

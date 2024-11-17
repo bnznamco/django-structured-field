@@ -113,3 +113,45 @@ def test_heavy_nested_queryset_field(setting_fixture, django_assert_num_queries)
                 'SELECT "test_module_simplerelationmodel"'
                 in operation.captured_queries[0]["sql"]
             )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
+def test_sequence_child(setting_fixture, django_assert_num_queries):
+    from tests.app.test_module.models import SimpleRelationModel, TestModel, TestSchema
+    from structured.settings import settings
+    
+    if settings.STRUCTURED_FIELD_SHARED_CACHE:
+        from structured.cache import get_global_cache
+        get_global_cache().flush()
+
+    SimpleRelationModel.objects.bulk_create(
+        [SimpleRelationModel(name=f"test{i:04d}") for i in range(100)]
+    )
+    model_list = list(SimpleRelationModel.objects.all())
+    
+    child_data1 = TestSchema(name="John1", age=25, fk_field=model_list[22])
+    child_data2 = TestSchema(name="John2", age=25, fk_field=model_list[33])
+    child_data3 = TestSchema(name="John3", age=25, fk_field=model_list[44])
+    child_data4 = TestSchema(name="John4", age=25, fk_field=model_list[55])
+    child_data5 = TestSchema(name="John5", age=25, fk_field=model_list[66])
+    data = TestSchema(name="Alice", age=10, fk_field=model_list[0], childs=[child_data1, child_data2, child_data3, child_data4, child_data5])
+    
+    TestModel.objects.create(title="test", structured_data=data)
+    with django_assert_num_queries(1):
+        instance = TestModel.objects.first()
+    n_query = 0 if settings.STRUCTURED_FIELD_SHARED_CACHE else 1
+    if not settings.STRUCTURED_FIELD_CACHE_ENABLED:
+        n_query = 6
+    with django_assert_num_queries(n_query) as operation:
+        assert instance.structured_data.fk_field.name == "test0000"
+        assert instance.structured_data.childs[0].fk_field.name == "test0022"
+        assert instance.structured_data.childs[1].fk_field.name == "test0033"
+        assert instance.structured_data.childs[2].fk_field.name == "test0044"
+        assert instance.structured_data.childs[3].fk_field.name == "test0055"
+        assert instance.structured_data.childs[4].fk_field.name == "test0066"
+        if n_query == 1:
+            assert (
+                'SELECT "test_module_simplerelationmodel"'
+                in operation.captured_queries[0]["sql"]
+            )

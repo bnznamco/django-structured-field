@@ -28,6 +28,7 @@ def test_admin_custom_widget_create_simple_data(setting_fixture, admin_client):
         {
             "title": "Content",
             "structured_data": '{"name": "John Doe", "age": 30}',
+            "structured_data_list": '[{"name": "John Doe", "age": 30}]',
         },
     )
     assert response.status_code == 302
@@ -47,6 +48,7 @@ def test_admin_custom_widget_create_nested_data(setting_fixture, admin_client):
         {
             "title": "Content",
             "structured_data": '{"name": "John Doe", "age": 30, "child": {"name": "Jane Doe", "age": 25}}',
+            "structured_data_list": '[{"name": "John Doe", "age": 30, "child": {"name": "Jane Doe", "age": 25}}]',
         },
     )
     assert response.status_code == 302
@@ -68,6 +70,7 @@ def test_admin_custom_widget_update_nested_data(setting_fixture, admin_client):
         {
             "title": "Content",
             "structured_data": '{"name": "John Doe", "age": 30, "child": {"name": "Jane Doe", "age": 25}}',
+            "structured_data_list": '[{"name": "John Doe", "age": 30, "child": {"name": "Jane Doe", "age": 25}}]',
         },
     )
     assert response.status_code == 302
@@ -83,6 +86,7 @@ def test_admin_custom_widget_update_nested_data(setting_fixture, admin_client):
         {
             "title": "Content",
             "structured_data": '{"name": "John Doe", "age": 30, "child": {"name": "Jane Doe", "age": 26}}',
+            "structured_data_list": '[{"name": "John Doe", "age": 30, "child": {"name": "Jane Doe", "age": 26}}]',
         },
     )
     assert response.status_code == 302
@@ -108,6 +112,7 @@ def test_admin_custom_widget_create_fk_qs_fields(setting_fixture, admin_client):
         {
             "title": "Content",
             "structured_data": '{"name": "John Doe", "age": 30, "fk_field": 1, "qs_field": [1, 2]}',
+            "structured_data_list": '[{"name": "John Doe", "age": 30, "fk_field": 1, "qs_field": [1, 2]}]',
         },
     )
     assert response.status_code == 302
@@ -133,6 +138,7 @@ def test_admin_custom_widget_create_nested_fk_qs_fields(setting_fixture, admin_c
         {
             "title": "Content",
             "structured_data": '{"name": "John Doe", "age": 30, "child": {"name": "Jane Doe", "age": 25, "fk_field": 1, "qs_field": [1, 2]}}',
+            "structured_data_list": '[{"name": "John Doe", "age": 30, "child": {"name": "Jane Doe", "age": 25, "fk_field": 1, "qs_field": [1, 2]}}]',
         },
     )
     assert response.status_code == 302

@@ -51,6 +51,7 @@ def init_schema():
 class TestModel(models.Model):
     title = models.CharField(max_length=255)
     structured_data = StructuredJSONField(schema=TestSchema, default=init_schema)
+    structured_data_list = StructuredJSONField(schema=TestSchema, default=list)
 
     def __str__(self) -> str:
         return self.title

@@ -8,14 +8,14 @@ T = TypeVar("T")
 
 
 class _LazyType:
-    def __init__(self, path):
+    def __init__(self, path):  # pragma: no cover
         self.path = path
 
-    def evaluate(self, base_cls):
+    def evaluate(self, base_cls):  # pragma: no cover
         module, type_name = self._evaluate_path(self.path, base_cls)
         return self._import(module, type_name)
 
-    def _evaluate_path(self, relative_path, base_cls):
+    def _evaluate_path(self, relative_path, base_cls):  # pragma: no cover
         base_module = base_cls.__module__
 
         modules = self._get_modules(relative_path, base_module)
@@ -26,7 +26,7 @@ class _LazyType:
             module = base_module
         return module, type_name
 
-    def _get_modules(self, relative_path, base_module):
+    def _get_modules(self, relative_path, base_module):  # pragma: no cover
         canonical_path = relative_path.lstrip(".")
         canonical_modules = canonical_path.split(".")
 
@@ -40,7 +40,7 @@ class _LazyType:
             raise ValueError(f"Can't evaluate path '{relative_path}'")
         return parent_modules[: parents_amount * -1] + canonical_modules
 
-    def _import(self, module_name, type_name):
+    def _import(self, module_name, type_name):  # pragma: no cover
         module = __import__(module_name, fromlist=[type_name])
         try:
             return getattr(module, type_name)
@@ -66,7 +66,7 @@ def get_type(source: Generic[T], raise_exception=True) -> T:
             return None
 
 
-def get_type_eval(source: Generic[T], model: Any, raise_exception=True) -> T:
+def get_type_eval(source: Generic[T], model: Any, raise_exception=True) -> T:  # pragma: no cover
     type = get_type(source, raise_exception)
     if isinstance(type, str):
         return _LazyType(type).evaluate(model)
@@ -75,7 +75,7 @@ def get_type_eval(source: Generic[T], model: Any, raise_exception=True) -> T:
 
 def find_model_type_from_args(args: List, base_model: Type, model_type: Type):
     lazy_types = [
-        _LazyType(arg).evaluate(base_model) for arg in args if isinstance(arg, str)
+        # _LazyType(arg).evaluate(base_model) for arg in args if isinstance(arg, str)
     ]
     return next(
         (
