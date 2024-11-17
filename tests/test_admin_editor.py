@@ -3,7 +3,7 @@ import pytest
 
 # Django admin custom widget is rendered correctly
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
 def test_admin_custom_widget(setting_fixture, admin_client):
     response = admin_client.get("/admin/test_module/testmodel/add/")
     assert response.status_code == 200
@@ -21,7 +21,7 @@ def test_admin_custom_widget(setting_fixture, admin_client):
 
 # Django admin custom widget can create simple data (name, age fields)
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
 def test_admin_custom_widget_create_simple_data(setting_fixture, admin_client):
     response = admin_client.post(
         "/admin/test_module/testmodel/add/",
@@ -40,7 +40,7 @@ def test_admin_custom_widget_create_simple_data(setting_fixture, admin_client):
 
 # Django admin custom widget can create nested data (name, age, child fields)
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
 def test_admin_custom_widget_create_nested_data(setting_fixture, admin_client):
     response = admin_client.post(
         "/admin/test_module/testmodel/add/",
@@ -61,7 +61,7 @@ def test_admin_custom_widget_create_nested_data(setting_fixture, admin_client):
 
 # Django admin custom widget can create and then update data (name, age, child fields)
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
 def test_admin_custom_widget_update_nested_data(setting_fixture, admin_client):
     response = admin_client.post(
         "/admin/test_module/testmodel/add/",
@@ -97,7 +97,7 @@ def test_admin_custom_widget_update_nested_data(setting_fixture, admin_client):
 
 # Django admin custom widget can create fk and qs fields
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
 def test_admin_custom_widget_create_fk_qs_fields(setting_fixture, admin_client):
     from tests.app.test_module.models import SimpleRelationModel
     SimpleRelationModel.objects.bulk_create(
@@ -122,7 +122,7 @@ def test_admin_custom_widget_create_fk_qs_fields(setting_fixture, admin_client):
 
 # Django admin custom widget can create nested data with fk and qs fields
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
 def test_admin_custom_widget_create_nested_fk_qs_fields(setting_fixture, admin_client):
     from tests.app.test_module.models import SimpleRelationModel
     SimpleRelationModel.objects.bulk_create(

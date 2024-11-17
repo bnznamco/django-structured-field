@@ -3,15 +3,16 @@ import pytest
 
 # Heavy nested TestSchema object with a ForeignKey field hits database only once
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
 def test_heavy_nested_foreign_key_field(setting_fixture, django_assert_num_queries):
     from tests.app.test_module.models import SimpleRelationModel, TestModel, TestSchema
+    from structured.settings import settings
     
     SimpleRelationModel.objects.bulk_create(
-        [SimpleRelationModel(name=f"test{i}") for i in range(100)]
+        [SimpleRelationModel(name=f"test{i:04d}") for i in range(100)]
     )
 
-    model_list = list(SimpleRelationModel.objects.all())
+    model_list = list(SimpleRelationModel.objects.all().order_by("name"))
 
     child_data1 = TestSchema(name="John", age=25, fk_field=model_list[10])
     child_data2 = TestSchema(
@@ -32,32 +33,36 @@ def test_heavy_nested_foreign_key_field(setting_fixture, django_assert_num_queri
 
     with django_assert_num_queries(1):
         instance = TestModel.objects.first()
-    with django_assert_num_queries(1) as operation:
-        assert instance.structured_data.fk_field.name == "test0"
-        assert instance.structured_data.child.fk_field.name == "test99"
-        assert instance.structured_data.child.child.fk_field.name == "test77"
-        assert instance.structured_data.child.child.child.fk_field.name == "test51"
+    n_query = 0 if settings.STRUCTURED_FIELD_SHARED_CACHE else 1
+    if not settings.STRUCTURED_FIELD_CACHE_ENABLED:
+        n_query = 6
+    with django_assert_num_queries(n_query) as operation:
+        assert instance.structured_data.fk_field.name == "test0000"
+        assert instance.structured_data.child.fk_field.name == "test0099"
+        assert instance.structured_data.child.child.fk_field.name == "test0077"
+        assert instance.structured_data.child.child.child.fk_field.name == "test0051"
         assert (
-            instance.structured_data.child.child.child.child.fk_field.name == "test23"
+            instance.structured_data.child.child.child.child.fk_field.name == "test0023"
         )
         assert (
             instance.structured_data.child.child.child.child.child.fk_field.name
-            == "test10"
+            == "test0010"
         )
-        assert (
-            'SELECT "test_module_simplerelationmodel"'
-            in operation.captured_queries[0]["sql"]
-        )
-
+        if n_query == 1:
+            assert (
+                'SELECT "test_module_simplerelationmodel"'
+                in operation.captured_queries[0]["sql"]
+            )
 
 # Heavy nested TestSchema object with a Queryset field hits database only once
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
 def test_heavy_nested_queryset_field(setting_fixture, django_assert_num_queries):
     from tests.app.test_module.models import SimpleRelationModel, TestModel, TestSchema
-    
+    from structured.settings import settings
+
     SimpleRelationModel.objects.bulk_create(
-        [SimpleRelationModel(name=f"test{i}") for i in range(100)]
+        [SimpleRelationModel(name=f"test{i:04d}") for i in range(100)]
     )
 
     model_list = list(SimpleRelationModel.objects.all())
@@ -83,7 +88,10 @@ def test_heavy_nested_queryset_field(setting_fixture, django_assert_num_queries)
 
     with django_assert_num_queries(1):
         instance = TestModel.objects.first()
-    with django_assert_num_queries(1) as operation:
+    n_query = 0 if settings.STRUCTURED_FIELD_SHARED_CACHE else 1
+    if not settings.STRUCTURED_FIELD_CACHE_ENABLED:
+        n_query = 6
+    with django_assert_num_queries(n_query) as operation:
         assert instance.structured_data.qs_field.count() == 10
         assert instance.structured_data.child.qs_field.count() == 10
         assert instance.structured_data.child.child.qs_field.count() == 10
@@ -93,7 +101,8 @@ def test_heavy_nested_queryset_field(setting_fixture, django_assert_num_queries)
             instance.structured_data.child.child.child.child.child.qs_field.count()
             == 10
         )
-        assert (
-            'SELECT "test_module_simplerelationmodel"'
-            in operation.captured_queries[0]["sql"]
-        )
+        if n_query == 1:
+            assert (
+                'SELECT "test_module_simplerelationmodel"'
+                in operation.captured_queries[0]["sql"]
+            )

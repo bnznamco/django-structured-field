@@ -1,7 +1,19 @@
 # TODO: get settings from django.conf.settings
-from django.conf import settings
+from django.conf import settings as django_settings
 from structured.utils.getter import pointed_getter
 
-GENERAL_SETTINGS = getattr(settings, "STRUCTURED_FIELD", {})
-STRUCTURED_FIELD_CACHE_ENABLED = pointed_getter(GENERAL_SETTINGS, "CACHE.ENABLED", True)
-STRUCTURED_FIELD_SHARED_CACHE = pointed_getter(GENERAL_SETTINGS, "CACHE.SHARED", False)
+
+class Settings:
+    def get_settings(self):
+        return getattr(django_settings, "STRUCTURED_FIELD", {})
+
+    @property
+    def STRUCTURED_FIELD_CACHE_ENABLED(self):
+        return pointed_getter(self.get_settings(), "CACHE.ENABLED", True)
+
+    @property
+    def STRUCTURED_FIELD_SHARED_CACHE(self):
+        return pointed_getter(self.get_settings(), "CACHE.SHARED", False)
+
+
+settings = Settings()

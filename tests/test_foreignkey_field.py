@@ -3,7 +3,7 @@ import pytest
 
 # Can create a TestSchema object with a ForeignKey field
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
 def test_foreign_key_field(setting_fixture):
     from tests.app.test_module.models import SimpleRelationModel, TestModel, TestSchema
     fk_instance = SimpleRelationModel.objects.create(name="test")
@@ -18,7 +18,7 @@ def test_foreign_key_field(setting_fixture):
 
 # Can create nested TestSchema objects with a ForeignKey field
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
 def test_nested_foreign_key_field(setting_fixture):
     from tests.app.test_module.models import SimpleRelationModel, TestModel, TestSchema
     fk_instance1 = SimpleRelationModel.objects.create(name="test1")
@@ -35,7 +35,7 @@ def test_nested_foreign_key_field(setting_fixture):
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
 def test_abstract_foreign_key_field(setting_fixture):
     from tests.app.test_module.models import ChildModel1, ChildModel2, TestModel, TestSchema
     instance1 = ChildModel1.objects.create(common_field="test1", child_field="test2")

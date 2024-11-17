@@ -26,5 +26,7 @@ def setting_fixture(request):
          settings.STRUCTURED_FIELD = {"CACHE": {"ENABLED": True}}
     elif request.param == "cache_disabled":
         settings.STRUCTURED_FIELD = {"CACHE": {"ENABLED": False}}
+    elif request.param == "shared_cache":
+        settings.STRUCTURED_FIELD = {"CACHE": {"SHARED": True, "ENABLED": True}}
     yield
     delattr(settings, "STRUCTURED_FIELD")
