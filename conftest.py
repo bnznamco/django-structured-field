@@ -1,5 +1,6 @@
 from django.core.management import call_command
 from django.db import connections
+from django.conf import settings
 import pytest
 
 
@@ -17,3 +18,13 @@ def django_db_setup(django_db_blocker):
     yield
     for connection in connections.all():
         connection.close()
+
+@pytest.fixture
+def setting_fixture(request):
+    """Fixture to dynamically adjust settings based on parameter."""
+    if request.param == "cache_enabled":
+         settings.STRUCTURED_FIELD = {"CACHE": {"ENABLED": True}}
+    elif request.param == "cache_disabled":
+        settings.STRUCTURED_FIELD = {"CACHE": {"ENABLED": False}}
+    yield
+    delattr(settings, "STRUCTURED_FIELD")

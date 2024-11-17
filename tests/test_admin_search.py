@@ -3,7 +3,8 @@ import pytest, random
 
 # Test structured_field/search_model/<model> endpoint search
 @pytest.mark.django_db
-def test_search_model(admin_client):
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+def test_search_model(setting_fixture, admin_client):
     from tests.app.test_module.models import SimpleRelationModel
     response = admin_client.get(
         "/structured_field/search_model/test_module.SimpleRelationModel/"
@@ -27,7 +28,8 @@ def test_search_model(admin_client):
 
 # Test structured_field/search_model/<model> endpoint search with _pk
 @pytest.mark.django_db
-def test_search_model_pk(admin_client):
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+def test_search_model_pk(setting_fixture, admin_client):
     from tests.app.test_module.models import SimpleRelationModel
     names = ["test1", "test2", "test3", "test4", "test5"]
     SimpleRelationModel.objects.bulk_create(
@@ -50,7 +52,8 @@ def test_search_model_pk(admin_client):
 
 # Test structured_field/search_model/<model> endpoint search with _pk__in
 @pytest.mark.django_db
-def test_search_model_pks(admin_client):
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+def test_search_model_pks(setting_fixture, admin_client):
     from tests.app.test_module.models import SimpleRelationModel
     names = ["test1", "test2", "test3", "test4", "test5"]
     SimpleRelationModel.objects.bulk_create(
@@ -75,7 +78,8 @@ def test_search_model_pks(admin_client):
     
 # Test structured_field/search_model/<model> with __all__ search
 @pytest.mark.django_db
-def test_search_model_all(admin_client):
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+def test_search_model_all(setting_fixture, admin_client):
     from tests.app.test_module.models import SimpleRelationModel
     names = ["test1", "test2", "test3", "test4", "test5"]
     SimpleRelationModel.objects.bulk_create(
@@ -94,7 +98,8 @@ def test_search_model_all(admin_client):
 
 # Test structured_field/search_model/<model> with wrong method
 @pytest.mark.django_db
-def test_search_model_wrong_method(admin_client):
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+def test_search_model_wrong_method(setting_fixture, admin_client):
     response = admin_client.post(
         "/structured_field/search_model/test_module.SimpleRelationModel/"
     )
@@ -104,7 +109,8 @@ def test_search_model_wrong_method(admin_client):
     
 # Test structured_field/search_model/<model> with wrong model
 @pytest.mark.django_db
-def test_search_model_wrong_model(admin_client):
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+def test_search_model_wrong_model(setting_fixture, admin_client):
     response = admin_client.get(
         "/structured_field/search_model/test_module.SimpleRelationModelWrong/"
     )

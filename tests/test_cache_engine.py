@@ -3,7 +3,8 @@ import pytest
 
 # Heavy nested TestSchema object with a ForeignKey field hits database only once
 @pytest.mark.django_db
-def test_heavy_nested_foreign_key_field(django_assert_num_queries):
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+def test_heavy_nested_foreign_key_field(setting_fixture, django_assert_num_queries):
     from tests.app.test_module.models import SimpleRelationModel, TestModel, TestSchema
     
     SimpleRelationModel.objects.bulk_create(
@@ -51,7 +52,8 @@ def test_heavy_nested_foreign_key_field(django_assert_num_queries):
 
 # Heavy nested TestSchema object with a Queryset field hits database only once
 @pytest.mark.django_db
-def test_heavy_nested_queryset_field(django_assert_num_queries):
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+def test_heavy_nested_queryset_field(setting_fixture, django_assert_num_queries):
     from tests.app.test_module.models import SimpleRelationModel, TestModel, TestSchema
     
     SimpleRelationModel.objects.bulk_create(

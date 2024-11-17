@@ -3,7 +3,8 @@ import pytest, json
 
 # Can create a TestSchema object with a QuerySet field
 @pytest.mark.django_db
-def test_queryset_field():
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+def test_queryset_field(setting_fixture):
     from tests.app.test_module.models import SimpleRelationModel, TestModel 
     names = ["test1", "test2", "test3", "test4", "test5"]
     SimpleRelationModel.objects.bulk_create(
@@ -24,7 +25,8 @@ def test_queryset_field():
 
 # TestSchema with QuerySet field mantains the order of the given QuerySet
 @pytest.mark.django_db
-def test_queryset_field_order():
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+def test_queryset_field_order(setting_fixture):
     from tests.app.test_module.models import SimpleRelationModel, TestModel
     names = ["test1", "test2", "test3", "test4", "test5"]
     SimpleRelationModel.objects.bulk_create(
@@ -55,7 +57,8 @@ def test_queryset_field_order():
 
 # Can create nested TestSchema objects with a QuerySet field
 @pytest.mark.django_db
-def test_nested_queryset_field():
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+def test_nested_queryset_field(setting_fixture):
     from tests.app.test_module.models import SimpleRelationModel, TestModel, TestSchema
     names1 = ["test1", "test2", "test3", "test4", "test5"]
     names2 = ["test6", "test7", "test8", "test9", "test10"]
@@ -84,7 +87,8 @@ def test_nested_queryset_field():
 
 # Can edit a QuerySet and save the changes to the database
 @pytest.mark.django_db
-def test_queryset_field_edit():
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+def test_queryset_field_edit(setting_fixture):
     from tests.app.test_module.models import SimpleRelationModel, TestModel
     names = ["test1", "test2", "test3", "test4", "test5"]
     SimpleRelationModel.objects.bulk_create(
