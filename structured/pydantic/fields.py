@@ -1,4 +1,3 @@
-from collections import defaultdict
 from typing import Any, Callable, Dict, Generic, TypeVar, Union, List, Type
 
 from django.db import models as django_models
@@ -31,7 +30,7 @@ class ForeignKey(Generic[T]):
         def validate_from_pk(
             pk: Union[int, str], model_class=model_class
         ) -> Type[django_models.Model]:
-            if is_abstract:
+            if getattr(model_class._meta, "abstract", False):
                 raise ValueError(
                     "Cannot retrieve abstract models from primary key only."
                 )
@@ -50,8 +49,9 @@ class ForeignKey(Generic[T]):
         ) -> Type[django_models.Model]:
             if data is None:
                 return None
+            model_class = get_type(source)
             if is_abstract:
-                model_class = apps.get_model(*data["model"])
+                model_class = apps.get_model(*data["model"].split("."))
             pk_attname = model_class._meta.pk.attname
             return validate_from_pk(data[pk_attname], model_class)
 
@@ -115,19 +115,19 @@ class QuerySet(Generic[T]):
             return get_type(source)
 
         is_abstract = getattr(get_mclass()._meta, "abstract", False)
+        if is_abstract:
+            raise ValueError(
+                "Abstract models cannot be used as QuerySet fields directly."
+            )
 
         def validate_from_pk_list(
             values: List[Union[int, str]]
         ) -> django_models.QuerySet:
-            if is_abstract:
-                raise ValueError(
-                    "Cannot retrieve abstract models from primary key only."
-                )
             preserved = django_models.Case(
                 *[django_models.When(pk=pk, then=pos) for pos, pk in enumerate(values)]
             )
-            return get_mclass()._default_manager.filter(pk__in=values).order_by(
-                preserved
+            return (
+                get_mclass()._default_manager.filter(pk__in=values).order_by(preserved)
             )
 
         int_str_union = cs.union_schema([cs.str_schema(), cs.int_schema()])
@@ -142,26 +142,19 @@ class QuerySet(Generic[T]):
         def validate_from_dict(
             values: List[Dict[str, Union[str, int]]]
         ) -> django_models.QuerySet:
-            if not is_abstract:
-                pk_attname = get_mclass()._meta.pk.attname
-                return validate_from_pk_list([data[pk_attname] for data in values])
-            stack = defaultdict(list)
-            for value in values:
-                mclass = apps.get_model(*value["model"])
-                pk_attname = mclass._meta.pk.attname
-                stack[mclass].append(value[pk_attname])
-            return django_models.QuerySet.union(
-                *[
-                    mclass._default_manager.filter(pk__in=stack[mclass])
-                    for mclass in stack
-                ]
-            )
+            pk_attname = get_mclass()._meta.pk.attname
+            return validate_from_pk_list([data[pk_attname] for data in values])
 
+        optional_field = cs.typed_dict_field(cs.nullable_schema(cs.str_schema()))
         from_dict_list_schema = cs.chain_schema(
             [
                 cs.list_schema(
                     cs.typed_dict_schema(
-                        {pk_attname: cs.typed_dict_field(int_str_union)}
+                        {
+                            pk_attname: cs.typed_dict_field(int_str_union),
+                            "model": optional_field,
+                            "name": optional_field,
+                        }
                     )
                 ),
                 cs.no_info_plain_validator_function(validate_from_dict),
@@ -174,6 +167,20 @@ class QuerySet(Generic[T]):
             ]
         )
 
+        def validate_from_model_list(
+            values: List[django_models.Model],
+        ) -> django_models.QuerySet:
+            if any(not isinstance(v, get_mclass()) for v in values):
+                raise ValueError(f"Expected list of {get_mclass()} instances.")
+            return get_mclass()._default_manager.filter(pk__in=[v.pk for v in values])
+
+        from_model_list_schema = cs.chain_schema(
+            [
+                cs.list_schema(cs.is_instance_schema(get_mclass())),
+                cs.no_info_plain_validator_function(validate_from_model_list),
+            ]
+        )
+
         def serialize_data(qs: django_models.QuerySet, info: SerializationInfo):
             if info.mode == "python":
                 serializer = build_standard_model_serializer(get_mclass(), depth=1)
@@ -182,7 +189,12 @@ class QuerySet(Generic[T]):
 
         return cs.json_or_python_schema(
             json_schema=cs.union_schema(
-                [from_cache_schema, from_pk_list_schema, from_dict_list_schema]
+                [
+                    from_cache_schema,
+                    from_pk_list_schema,
+                    from_dict_list_schema,
+                    from_model_list_schema,
+                ]
             ),
             python_schema=cs.union_schema(
                 [
@@ -190,6 +202,7 @@ class QuerySet(Generic[T]):
                     from_cache_schema,
                     from_pk_list_schema,
                     from_dict_list_schema,
+                    from_model_list_schema,
                 ]
             ),
             serialization=cs.plain_serializer_function_ser_schema(
