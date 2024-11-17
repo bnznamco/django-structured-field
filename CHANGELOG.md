@@ -2,6 +2,35 @@
 
 
 
+## v0.3.0 (2024-11-17)
+
+### Feature
+
+* feat(admin): autopopolate items in admin search with paginated responses ([`fe15ee0`](https://github.com/lotrekagency/django-structured-field/commit/fe15ee07a22306d3617774f0cf944cfbe936622e))
+
+### Fix
+
+* fix(pydantic): fix serializations of Qs field ([`995e5e1`](https://github.com/lotrekagency/django-structured-field/commit/995e5e1d5331984a5f11ec80d78cf1358d33d9c5))
+
+* fix(pydantic): fix pydantic annotation inspection ([`2c17531`](https://github.com/lotrekagency/django-structured-field/commit/2c17531678939b1fd28f8c7c049cc0f46feab55a))
+
+* fix(abstract): fix compatibility with abstract foreign key ([`46b12e4`](https://github.com/lotrekagency/django-structured-field/commit/46b12e4104aabe1dc216ee082c1468d0ed005334))
+
+### Refactor
+
+* refactor(pydantic): refactor annotation patching logic, now handling recustions ([`d5aa257`](https://github.com/lotrekagency/django-structured-field/commit/d5aa257f0f82830ff2cf192f26c596b9524ff757))
+
+### Unknown
+
+* tests: fix tests for shared cache ([`f080e10`](https://github.com/lotrekagency/django-structured-field/commit/f080e10368220959f6ac0edd59d1301a13954f2b))
+
+* tests: run tests both with cache on and off and shared cache ([`8af9203`](https://github.com/lotrekagency/django-structured-field/commit/8af92032677dd7731dcebc48f12e3476e2efeff4))
+
+* tests: run tests both with cache on and off ([`76fb3ec`](https://github.com/lotrekagency/django-structured-field/commit/76fb3ec8f391423a18aa71c1ee1804ac24d1d5a1))
+
+* tests: update tests for abstract querysets ([`f544ce6`](https://github.com/lotrekagency/django-structured-field/commit/f544ce62b31e7f4373d066b1900e9427152a2d9d))
+
+
 ## v0.2.1 (2024-11-15)
 
 ### Fix
