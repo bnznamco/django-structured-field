@@ -1,3 +1,3 @@
-from structured.cache.engine import CacheEngine, CacheEnabledModel
+from structured.cache.engine import CacheEngine, CacheEnabledModel, get_global_cache
 
-__all__ = ["CacheEngine", "CacheEnabledModel"]
+__all__ = ["CacheEngine", "CacheEnabledModel", "get_global_cache"]

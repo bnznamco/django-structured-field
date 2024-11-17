@@ -276,3 +276,10 @@ class CacheEngine:
         cache_instance = cls.from_model(mdlcls)
         setattr(mdlcls, "_cache_engine", cache_instance)
         return mdlcls
+
+
+def get_global_cache():
+    if settings.STRUCTURED_FIELD_SHARED_CACHE:
+        return ThreadSafeCache()
+    print("Warning: Shared cache is disabled. \"get_global_cache\" will return a new cache instance every time it is called.")
+    return Cache()

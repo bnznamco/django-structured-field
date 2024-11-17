@@ -7,6 +7,9 @@ import pytest
 def test_heavy_nested_foreign_key_field(setting_fixture, django_assert_num_queries):
     from tests.app.test_module.models import SimpleRelationModel, TestModel, TestSchema
     from structured.settings import settings
+    if settings.STRUCTURED_FIELD_SHARED_CACHE:
+        from structured.cache import get_global_cache
+        get_global_cache().flush()
     
     SimpleRelationModel.objects.bulk_create(
         [SimpleRelationModel(name=f"test{i:04d}") for i in range(100)]
@@ -60,6 +63,10 @@ def test_heavy_nested_foreign_key_field(setting_fixture, django_assert_num_queri
 def test_heavy_nested_queryset_field(setting_fixture, django_assert_num_queries):
     from tests.app.test_module.models import SimpleRelationModel, TestModel, TestSchema
     from structured.settings import settings
+    
+    if settings.STRUCTURED_FIELD_SHARED_CACHE:
+        from structured.cache import get_global_cache
+        get_global_cache().flush()
 
     SimpleRelationModel.objects.bulk_create(
         [SimpleRelationModel(name=f"test{i:04d}") for i in range(100)]
