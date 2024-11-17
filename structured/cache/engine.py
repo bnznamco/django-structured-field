@@ -13,6 +13,7 @@ from typing import Iterable, Union
 from pydantic import model_validator
 import threading
 from django.apps import apps
+from django.db.models.signals import post_save, pre_delete
 
 if TYPE_CHECKING:
     from structured.pydantic.models import BaseModel
@@ -35,8 +36,9 @@ class CacheEnabledModel:
         return cls._cache_engine.fetch_cache(instance)
 
 
-class Cache(dict):
-    def flush(self, model=None):
+class Cache(defaultdict):
+    def flush(self, data: Union[DjangoModel, Iterable[DjangoModel], None] = None, **kwargs):
+        model = kwargs.get("model", None)
         if model:
             if isinstance(model, str):
                 model = next(
@@ -44,8 +46,38 @@ class Cache(dict):
                 )
             if model in self:
                 del self[model]
+        if data:
+            if isinstance(data, DjangoModel):
+                model = data.__class__
+                if model in self and data.pk in self[model]:
+                    del self[model][data.pk]
+            else:
+                for instance in data:
+                    model = instance.__class__
+                    if model in self and instance.pk in self[model]:
+                        del self[model][instance.pk]
         else:
             self.clear()
+
+    def set(self, data: Union[DjangoModel, Iterable[DjangoModel]]):
+        if isinstance(data, DjangoModel):
+            self[data.__class__].update({data.pk: data})
+        else:
+            for instance in data:
+                self[instance.__class__].update({instance.pk: instance})
+
+    def __init__(self) -> None:
+        super().__init__(dict)
+        def on_save(sender, instance, **kwargs):
+            cache = get_global_cache() or self
+            if instance.__class__ in cache:
+                cache.set(instance)
+        def on_delete(sender, instance, **kwargs):
+            cache = get_global_cache() or self
+            if instance.__class__ in cache:
+                cache.flush(instance)
+        post_save.connect(on_save)
+        pre_delete.connect(on_delete)
 
 
 class ThreadSafeCache(Cache):
@@ -62,6 +94,7 @@ class ThreadSafeCache(Cache):
             with cls._lock:
                 if not cls._instance:
                     cls._instance = super().__new__(cls)
+        
         return cls._instance
 
 
@@ -264,7 +297,7 @@ class CacheEngine:
             pks = [pk for pk in pks if pk not in models_pks]
             if len(pks):
                 models += list(model.objects.filter(pk__in=pks))
-            cache[model] = {obj.pk: obj for obj in models}
+            cache[model].update({obj.pk: obj for obj in models})
 
         for model, touples in fk_data.items():
             for t in touples:
@@ -281,5 +314,4 @@ class CacheEngine:
 def get_global_cache():
     if settings.STRUCTURED_FIELD_SHARED_CACHE:
         return ThreadSafeCache()
-    print("Warning: Shared cache is disabled. \"get_global_cache\" will return a new cache instance every time it is called.")
-    return Cache()
+    return None
