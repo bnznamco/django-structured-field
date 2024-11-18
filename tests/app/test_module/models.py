@@ -1,4 +1,3 @@
-from __future__ import annotations
 from typing import Optional, List
 from django.db import models
 from structured.fields import StructuredJSONField
