@@ -1,6 +1,7 @@
 import terser from '@rollup/plugin-terser';
 import scss from 'rollup-plugin-scss'
 
+const isProduction = process.env.NODE_ENV === 'production';
 
 export default {
     input: 'reactive-forms/main.js',
@@ -8,9 +9,10 @@ export default {
         {
             format: 'iife',
             dir: 'structured/static',
-            sourcemap: true,
+            sourcemap: !isProduction,
             assetFileNames: 'css/structured-field-form.min.css',
-            entryFileNames: 'js/structured-field-form.js'
+            entryFileNames: 'js/structured-field-form.js',
+            plugins: isProduction ? [terser()] : []
         },
         {
             dir: 'structured/static',
@@ -20,6 +22,7 @@ export default {
             plugins: [terser()]
         }
     ],
-    plugins: [scss({ outputStyle: 'compressed', watch: 'reactive-forms/scss/components' })]
-
+    plugins: [
+        scss({ outputStyle: 'compressed', watch: 'reactive-forms/scss/components' })
+    ]
 };
