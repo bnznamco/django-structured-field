@@ -25,9 +25,13 @@ class StructuredDescriptior(DeferredAttribute):
     field: "StructuredJSONField"
 
     def __set__(self, instance, value):
-        # TODO: check if it's better to validate here or in __get__ function (performance reasons)
-        # if not self.field.check_type(value):
-        #     value = self.field.schema.validate_python(value)
+        raw_attr = f"{self.field.attname}_raw"
+        if not hasattr(instance.__class__, raw_attr):
+            setattr(
+                instance.__class__,
+                raw_attr,
+                property(self.get_raw_data, self.set_raw_data, self.del_raw_data),
+            )
         instance.__dict__[self.field.attname] = value
 
     def __get__(self, instance, cls=None):
@@ -37,12 +41,22 @@ class StructuredDescriptior(DeferredAttribute):
             self.__set__(instance, value)
         return value
 
+    def get_raw_data(self, instance):
+        return self.field.__raw_data
+
+    def set_raw_data(self, instance, value):
+        instance.__dict__[self.field.attname] = value
+
+    def del_raw_data(self, instance):
+        del instance.__dict__[self.field.attname]
+
 
 class StructuredJSONField(JSONField):
     # TODO: share cache in querysets of models having this same field
     # TODO: write queries for prefetch related for models inside the field
 
     descriptor_class = StructuredDescriptior
+    __raw_data = None
 
     def validate(self, value, model_instance):
         try:
@@ -114,7 +128,8 @@ class StructuredJSONField(JSONField):
     def from_db_value(self, value: Any, expression: Any, connection: Any) -> Any:
         data = super().from_db_value(value, expression, connection)
         if isinstance(data, str):
-            return json.loads(data)
+            data = json.loads(data)
+        self.__raw_data = data
         return data
 
     def deconstruct(self):
