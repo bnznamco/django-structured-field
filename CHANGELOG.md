@@ -2,6 +2,21 @@
 
 
 
+## v0.3.1 (2024-11-18)
+
+### Fix
+
+* fix(cache): added signals to update cache entries in shared cache ([`333e422`](https://github.com/lotrekagency/django-structured-field/commit/333e42243054942d39378b20738a6ad01bf12b74))
+
+### Unknown
+
+* tests: update test models ([`8c6ca2a`](https://github.com/lotrekagency/django-structured-field/commit/8c6ca2a29e3cbcef0115c35ee3e84c6044c506e3))
+
+* deps: update to pydantic 2.9.2 ([`ba21a56`](https://github.com/lotrekagency/django-structured-field/commit/ba21a562efd67f29013d4385d92b0b7ca68019df))
+
+* tests: update cache tests ([`f9a763a`](https://github.com/lotrekagency/django-structured-field/commit/f9a763a9b418794aae448294889972cc60e34b6d))
+
+
 ## v0.3.0 (2024-11-17)
 
 ### Feature
