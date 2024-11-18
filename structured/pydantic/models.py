@@ -1,10 +1,10 @@
 from typing import Any, Dict, Tuple, Optional, Type
 from pydantic._internal._typing_extra import (
-    get_cls_types_namespace,
     parent_frame_namespace,
+    merge_cls_and_parent_ns,
 )
 from pydantic._internal._generics import PydanticGenericMetadata
-from pydantic._internal._model_construction import ModelMetaclass
+from pydantic._internal._model_construction import ModelMetaclass, build_lenient_weakvaluedict
 from pydantic import BaseModel as PyDBaseModel
 from structured.utils.pydantic import map_method_aliases, patch_annotation
 from abc import ABCMeta
@@ -56,7 +56,8 @@ class BaseModelMeta(ModelMetaclass):
         namespace: Dict[str, Any],
     ) -> Dict[str, Any]:
         cls = ABCMeta.__new__(mcs, cls_name, bases, namespace)
-        return get_cls_types_namespace(cls, parent_frame_namespace())
+        parent_namespace = build_lenient_weakvaluedict(parent_frame_namespace())
+        return merge_cls_and_parent_ns(cls, parent_namespace)
 
 
 class BaseModel(CacheEnabledModel, PyDBaseModel, metaclass=BaseModelMeta):
