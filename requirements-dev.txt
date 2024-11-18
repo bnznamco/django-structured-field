@@ -1,11 +1,11 @@
 -r requirements.txt
 
 coverage>=4.4
-flake8==4.0.1
-mock==2.0.0
-urllib3==1.26.7
-psycopg2-binary<2.9
+flake8==7.1.1
+mock==5.1.0
+urllib3==2.2.3
+psycopg2-binary~=2.9.10
 pytest>=3.9.1,<=7.4.2
 pytest-cov>=2.6.0
 pytest-django>=4.5.2
-python-semantic-release==8.1.1
+python-semantic-release==9.14.0
