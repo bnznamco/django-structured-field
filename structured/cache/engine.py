@@ -1,145 +1,40 @@
 from __future__ import annotations
 from collections import defaultdict
 from inspect import isclass
-from typing import Any, Dict, Sequence, Type, TYPE_CHECKING
-from typing_extensions import get_args, get_origin
+from typing import Any, Dict, List, Tuple, Set, Sequence, Type, TYPE_CHECKING, Union, get_origin, get_args
+from django.db.models import Model as DjangoModel
+from django.apps import apps
 from structured.settings import settings
-from structured.pydantic.fields import ForeignKey, QuerySet
-from structured.utils.typing import find_model_type_from_args, get_type
+from structured.utils.typing import get_type, find_model_type_from_args
 from structured.utils.getter import pointed_getter
 from structured.utils.setter import pointed_setter
-from django.db.models import Model as DjangoModel
-from typing import Iterable, Union
-from pydantic import model_validator
-import threading
-from django.apps import apps
-from django.db.models.signals import post_save, pre_delete
+from structured.pydantic.fields import ForeignKey, QuerySet
+from .cache import Cache, ThreadSafeCache, ValueWithCache, CacheEnabledModel
+from .rel_info import RelInfo
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from structured.pydantic.models import BaseModel
-
-# TODO:
-# ::: Actually this is a first draft.
-# The system should be more type safe.
-# It should handle initialization made with model instance not only dicts
-# Neet to check if there are problems with different formats for pks (model instaces or string or dicts)
-
-
-class CacheEnabledModel:
-    _cache_engine: CacheEngine
-
-    @model_validator(mode="wrap")
-    @classmethod
-    def build_cache(cls, data, handler) -> Any:
-        data = cls._cache_engine.build_cache(data)
-        instance: "BaseModel" = handler(data)
-        return cls._cache_engine.fetch_cache(instance)
-
-
-class Cache(defaultdict):
-    def flush(self, data: Union[DjangoModel, Iterable[DjangoModel], None] = None, **kwargs):
-        model = kwargs.get("model", None)
-        if model:
-            if isinstance(model, str):
-                model = next(
-                    (m.__name__ for m in self.keys() if m.__name__ == model), None
-                )
-            if model in self:
-                del self[model]
-        if data:
-            if isinstance(data, DjangoModel):
-                model = data.__class__
-                if model in self and data.pk in self[model]:
-                    del self[model][data.pk]
-            else:
-                for instance in data:
-                    model = instance.__class__
-                    if model in self and instance.pk in self[model]:
-                        del self[model][instance.pk]
-        else:
-            self.clear()
-
-    def set(self, data: Union[DjangoModel, Iterable[DjangoModel]]):
-        if isinstance(data, DjangoModel):
-            self[data.__class__].update({data.pk: data})
-        else:
-            for instance in data:
-                self[instance.__class__].update({instance.pk: instance})
-
-    def __init__(self) -> None:
-        super().__init__(dict)
-        def on_save(sender, instance, **kwargs):
-            cache = get_global_cache() or self
-            if instance.__class__ in cache:
-                cache.set(instance)
-        def on_delete(sender, instance, **kwargs):
-            cache = get_global_cache() or self
-            if instance.__class__ in cache:
-                cache.flush(instance)
-        post_save.connect(on_save)
-        pre_delete.connect(on_delete)
-
-
-class ThreadSafeCache(Cache):
-    """
-    It is a singleton cache object that allows sharing cache data between fields and instances.
-    Need to improve data reliability and thread safety.
-    """
-
-    _instance = None
-    _lock = threading.Lock()
-
-    def __new__(cls):
-        if cls._instance is None:
-            with cls._lock:
-                if not cls._instance:
-                    cls._instance = super().__new__(cls)
-        
-        return cls._instance
-
-
-class ValueWithCache:
-    def __init__(self, cache, model, value) -> None:
-        self.cache: Cache = cache
-        self.value: Union[Iterable[Union[str, int]], str, int] = value
-        self.model: Type[DjangoModel] = model
-
-    def retrieve(self):
-        cache = self.cache.get(self.model)
-        if hasattr(self.value, "__iter__") and not isinstance(self.value, str):
-            qs = self.model.objects.filter(pk__in=self.value)
-            setattr(
-                qs,
-                "_result_cache",
-                [cache[i] for i in self.value if i in cache] if cache else [],
-            )
-            return qs
-        else:
-            val = cache.get(self.value, None)
-            if val is None:
-                return self.model._default_manager.get(pk=self.value)
-            else:
-                return val
-
-
-class RelInfo:
-    FKField: str = "fk"
-    QSField: str = "qs"
-    RIField: str = "rel"
-    RLField: str = "rel_l"
-
-    def __init__(self, model, type, field) -> None:
-        self.model = model
-        self.type = type
-        self.field = field
 
 
 class CacheEngine:
+    """
+    The cache engine class that handles all the caching operations in a certain model.
+    Each model has its own cache engine instance that is responsible for building and fetching the cache data.
+    The cache engine is responsible for building and fetching the cache data for the given model.
+    During the build process, the cache engine analyzes the model fields and builds the cache data accordingly.
+    The cache data is then stored in the cache object.
+    The fetch process retrieves the cache data from the cache object and returns the cached values.
+    Pydantic serialization does the rest of the job by unpacking the cached values.
+    """
+
     def __init__(self, related_fields: Dict[str, RelInfo]) -> None:
         self.__related_fields__ = related_fields
 
     @staticmethod
-    def fetch_cache(instance):
+    def fetch_cache(instance: BaseModel) -> BaseModel:
+        """
+        Fetch values from the cache for the given instance.
+        """
         for field_name in instance.model_fields_set:
             val = getattr(instance, field_name, None)
             if isinstance(val, ValueWithCache):
@@ -150,10 +45,20 @@ class CacheEngine:
 
     @classmethod
     def from_model(cls, model: BaseModel) -> "CacheEngine":
+        """
+        Creates a CacheEngine instance from the given model.
+        """
         return cls(related_fields=cls.inspect_related_fields(model))
 
     @classmethod
     def inspect_related_fields(cls, model: Type[BaseModel]) -> Dict[str, RelInfo]:
+        """
+        Analyzes the model fields and returns only the related fields with a Relation Info obj in the following format:
+        {
+            field1: RelInfo(model, type, field),
+            field2: RelInfo(model, type, field),
+        }
+        """
         related = {}
         for field_name, field in model.model_fields.items():
             annotation = field.annotation
@@ -168,15 +73,12 @@ class CacheEngine:
                 related[field_name] = RelInfo(
                     get_type(annotation), RelInfo.QSField, field
                 )
-
             elif isclass(origin) and issubclass(origin, Sequence):
                 subclass = find_model_type_from_args(args, model, CacheEnabledModel)
                 if subclass:
                     related[field_name] = RelInfo(subclass, RelInfo.RLField, field)
-
             elif isclass(annotation) and issubclass(annotation, CacheEnabledModel):
                 related[field_name] = RelInfo(annotation, RelInfo.RIField, field)
-
             elif origin and origin is Union:
                 subclass = find_model_type_from_args(args, model, CacheEnabledModel)
                 if subclass:
@@ -184,134 +86,168 @@ class CacheEngine:
 
         return related
 
-    def get_all_fk_data(self, data):
+    def get_all_fk_data(self, data: Any) -> Dict[Type[DjangoModel], List[Tuple[str, Any]]]:
+        """
+        Get all foreign key data from the given data.
+        """
         if isinstance(data, Sequence):
             fk_data = defaultdict(list)
             for index in range(len(data)):
                 child_fk_data = self.get_all_fk_data(data[index])
-                for model, touples in child_fk_data.items():
-                    fk_data[model] += [(f"{index}.{t[0]}", t[1]) for t in touples]
+                for model, tuples in child_fk_data.items():
+                    fk_data[model] += [(f"{index}.{t[0]}", t[1]) for t in tuples]
             return fk_data
         return self.get_fk_data(data)
 
-    # flake8: noqa: C901
-    def get_fk_data(self, data):
+    def get_fk_data(self, data: Any) -> Dict[Type[DjangoModel], List[Tuple[str, Any]]]:
+        """
+        Get foreign key data from the given data.
+        """
         fk_data = defaultdict(list)
         if not data:
             return fk_data
         for field_name, info in self.__related_fields__.items():
             if info.type == RelInfo.FKField:
-                value = pointed_getter(data, field_name, None)
-                if info.model._meta.abstract:
-                    if isinstance(value, dict) and "model" in value:
-                        info.model = apps.get_model(*value["model"].split("."))
-                    if isinstance(value, DjangoModel) and not value._meta.abstract:
-                        info.model = value.__class__
-                    elif isinstance(value, int) or isinstance(value, str) and value.isnumeric():
-                        raise ValueError(
-                            "Cannot retrieve abstract models from primary key only."
-                        )
-                if isinstance(value, DjangoModel):
-                    info.model = value.__class__
-                    value = value.pk
-                if isinstance(value, dict):
-                    info.model = apps.get_model(*value["model"].split("."))
-                    value = value.get(info.model._meta.pk.attname, None)
-                if value:
-                    if isinstance(
-                        value, ValueWithCache
-                    ):  # needed to break recursive cache builds
-                        fk_data = {}
-                        break
-                    attname = ""
-                    if not info.model._meta.abstract:
-                        attname = info.model._meta.pk.attname
-                    fk_data[info.model].append(
-                        (
-                            field_name,
-                            pointed_getter(value, attname, value),
-                        )
-                    )
+                self._process_fk_field(data, field_name, info, fk_data)
             elif info.type == RelInfo.QSField:
-                value = pointed_getter(data, field_name, [])
-                if isinstance(value, list):
-                    if any(
-                        True for v in value if isinstance(v, ValueWithCache)
-                    ):  # needed to break recursive cache builds
-                        fk_data = {}
-                        break
-                    fk_data[info.model].append(
-                        (
-                            field_name,
-                            [
-                                pointed_getter(i, info.model._meta.pk.attname, i)
-                                for i in value
-                                if i
-                            ],
-                        )
-                    )
-
+                self._process_qs_field(data, field_name, info, fk_data)
             elif info.type == RelInfo.RLField:
-                values = pointed_getter(data, field_name, [])
-                if isinstance(values, list):
-                    for index in range(len(values)):
-                        for model, touples in (
-                            self.from_model(info.model)
-                            .get_all_fk_data(values[index])
-                            .items()
-                        ):
-                            fk_data[model] += [
-                                (f"{field_name}.{index}.{t[0]}", t[1]) for t in touples
-                            ]
+                self._process_rl_field(data, field_name, info, fk_data)
             elif info.type == RelInfo.RIField:
-                value = pointed_getter(data, field_name, None)
-                child_fk_data = self.from_model(info.model).get_all_fk_data(value)
-                for model, touples in child_fk_data.items():
-                    fk_data[model] += [(f"{field_name}.{t[0]}", t[1]) for t in touples]
+                self._process_ri_field(data, field_name, info, fk_data)
         return fk_data
 
+    def _process_fk_field(self, data: Any, field_name: str, info: RelInfo, fk_data: Dict[Type[DjangoModel], List[Tuple[str, Any]]]) -> None:
+        """
+        Process a foreign key field.
+        """
+        value = pointed_getter(data, field_name, None)
+        if info.model._meta.abstract:
+            info.model = self._resolve_abstract_model(value, info.model)
+        if isinstance(value, DjangoModel):
+            info.model = value.__class__
+            value = value.pk
+        if isinstance(value, dict):
+            info.model = apps.get_model(*value["model"].split("."))
+            value = value.get(info.model._meta.pk.attname, None)
+        if value:
+            if isinstance(value, ValueWithCache):
+                fk_data = {}
+                return
+            attname = (
+                info.model._meta.pk.attname if not info.model._meta.abstract else ""
+            )
+            fk_data[info.model].append(
+                (field_name, pointed_getter(value, attname, value))
+            )
+
+    def _resolve_abstract_model(self, value: Any, model: Type[DjangoModel]) -> Type[DjangoModel]:
+        """
+        Resolve the abstract model from the given value.
+        """
+        if isinstance(value, dict) and "model" in value:
+            return apps.get_model(*value["model"].split("."))
+        if isinstance(value, DjangoModel) and not value._meta.abstract:
+            return value.__class__
+        if isinstance(value, (int, str)) and model._meta.abstract:
+            raise ValueError("Cannot retrieve abstract models from primary key only.")
+        return model
+
+    def _process_qs_field(self, data: Any, field_name: str, info: RelInfo, fk_data: Dict[Type[DjangoModel], List[Tuple[str, Any]]]) -> None:
+        """
+        Process a queryset field.
+        """
+        value = pointed_getter(data, field_name, [])
+        if isinstance(value, list):
+            if any(isinstance(v, ValueWithCache) for v in value):
+                fk_data = {}
+                return
+            fk_data[info.model].append(
+                (
+                    field_name,
+                    [
+                        pointed_getter(i, info.model._meta.pk.attname, i)
+                        for i in value
+                        if i
+                    ],
+                )
+            )
+
+    def _process_rl_field(self, data: Any, field_name: str, info: RelInfo, fk_data: Dict[Type[DjangoModel], List[Tuple[str, Any]]]) -> None:
+        """
+        Process a related list field.
+        """
+        values = pointed_getter(data, field_name, [])
+        if isinstance(values, list):
+            for index in range(len(values)):
+                for model, tuples in (
+                    self.from_model(info.model).get_all_fk_data(values[index]).items()
+                ):
+                    fk_data[model] += [
+                        (f"{field_name}.{index}.{t[0]}", t[1]) for t in tuples
+                    ]
+
+    def _process_ri_field(self, data: Any, field_name: str, info: RelInfo, fk_data: Dict[Type[DjangoModel], List[Tuple[str, Any]]]) -> None:
+        """
+        Process a related instance field.
+        """
+        value = pointed_getter(data, field_name, None)
+        child_fk_data = self.from_model(info.model).get_all_fk_data(value)
+        for model, tuples in child_fk_data.items():
+            fk_data[model] += [(f"{field_name}.{t[0]}", t[1]) for t in tuples]
+
     def build_cache(self, data: Any) -> Any:
+        """
+        Build the cache for the given data.
+        """
         if not settings.STRUCTURED_FIELD_CACHE_ENABLED:
             return data
         fk_data = self.get_all_fk_data(data)
+        plainset = self._build_plainset(fk_data)
+        cache = ThreadSafeCache() if settings.STRUCTURED_FIELD_SHARED_CACHE else Cache()
+        self._populate_cache(cache, plainset)
+        self._set_cache_values(data, fk_data, cache)
+        return data
+
+    def _build_plainset(self, fk_data: Dict[Type[DjangoModel], List[Tuple[str, Any]]]) -> Dict[Type[DjangoModel], Set[Any]]:
+        """
+        Build a plain set of foreign key data.
+        """
         plainset = defaultdict(set)
-        for model, touples in fk_data.items():
-            for t in touples:
+        for model, tuples in fk_data.items():
+            for t in tuples:
                 if isinstance(t[1], Sequence):
                     plainset[model].update(t[1])
                 else:
                     plainset[model].add(t[1])
-        if settings.STRUCTURED_FIELD_SHARED_CACHE:
-            cache = ThreadSafeCache()
-        else:
-            cache = Cache()
+        return plainset
+
+    def _populate_cache(self, cache: Cache, plainset: Dict[Type[DjangoModel], Set[Any]]) -> None:
+        """
+        Populate the cache with the given plain set.
+        """
         for model, values in plainset.items():
             models = list(cache.get(model, {}).values())
-            pks = []
-            for value in values:
-                if isinstance(value, model):
-                    models.append(value)
-                else:
-                    pks.append(value)
+            pks = [value for value in values if not isinstance(value, model)]
             models_pks = [m.pk for m in models]
             pks = [pk for pk in pks if pk not in models_pks]
-            if len(pks):
+            if pks:
                 models += list(model.objects.filter(pk__in=pks))
             cache[model].update({obj.pk: obj for obj in models})
 
-        for model, touples in fk_data.items():
-            for t in touples:
+    def _set_cache_values(self, data: Any, fk_data: Dict[Type[DjangoModel], List[Tuple[str, Any]]], cache: Cache) -> None:
+        """
+        Set the cache values in the given data.
+        """
+        for model, tuples in fk_data.items():
+            for t in tuples:
                 pointed_setter(data, t[0], ValueWithCache(cache, model, t[1]))
-        return data
 
     @classmethod
     def add_cache_engine_to_class(cls, mdlcls: Type[Any]) -> Type[Any]:
+        """
+        Add a cache engine to the given model class.
+        """
         cache_instance = cls.from_model(mdlcls)
         setattr(mdlcls, "_cache_engine", cache_instance)
         return mdlcls
-
-
-def get_global_cache():
-    if settings.STRUCTURED_FIELD_SHARED_CACHE:
-        return ThreadSafeCache()
-    return None

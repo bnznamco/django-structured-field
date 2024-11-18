@@ -17,7 +17,7 @@ from typing_extensions import Annotated
 from pydantic.fields import Field
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from structured.pydantic.models import BaseModel
 
 

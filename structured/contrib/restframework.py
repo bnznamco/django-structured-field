@@ -7,7 +7,7 @@ from structured.fields import StructuredJSONField as DjangoStructuredJSONField
 from structured.utils.errors import map_pydantic_errors
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from structured.pydantic.models import BaseModel
 
 
