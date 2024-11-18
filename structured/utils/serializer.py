@@ -4,11 +4,12 @@ from django.db import models as django_models
 
 
 def build_standard_model_serializer(
-    model,
-    depth,
+    model: Type[django_models.Model],
+    depth: int,
     bases: Optional[Tuple[Type[serializers.Serializer]]] = None,
     fields: Union[str, Sequence[str]] = "__all__",
-):
+) -> Type[serializers.ModelSerializer]:
+    """Build a standard model serializer with the given parameters."""
     if bases is None:
         bases = (serializers.ModelSerializer,)
     return type(
@@ -24,9 +25,8 @@ def build_standard_model_serializer(
     )
 
 
-def minimal_serialization(
-    instance: Type[django_models.Model],
-) -> Dict[str, Union[str, int]]:
+def minimal_serialization(instance: django_models.Model) -> Optional[Dict[str, Union[str, int]]]:
+    """Serialize a model instance minimally."""
     return (
         {
             "id": instance.pk,
@@ -38,7 +38,6 @@ def minimal_serialization(
     )
 
 
-def minimal_list_serialization(
-    instances: List[Type[django_models.Model]],
-) -> List[Dict[str, Union[str, int]]]:
+def minimal_list_serialization(instances: List[django_models.Model]) -> List[Dict[str, Union[str, int]]]:
+    """Serialize a list of model instances minimally."""
     return [minimal_serialization(instance) for instance in instances]

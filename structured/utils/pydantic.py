@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, ForwardRef, get_origin, get_args
+from typing import Any, Dict, List, Type, ForwardRef, get_origin, get_args
 from structured.pydantic.fields import ForeignKey, QuerySet
 from django.db.models import Model as DjangoModel
 from django.db.models.query import QuerySet as DjangoQuerySet
@@ -10,6 +10,7 @@ from typing_extensions import Annotated
 
 
 def patch_annotation(annotation: Any, cls_namespace: Dict[str, Any]) -> Any:
+    """Patch the annotation to handle special cases for Django and Pydantic."""
     if isinstance(annotation, str):
         annotation = eval_type_lenient(annotation, cls_namespace)
     origin = get_origin(annotation)
@@ -40,7 +41,8 @@ def patch_annotation(annotation: Any, cls_namespace: Dict[str, Any]) -> Any:
     return annotation
 
 
-def map_method_aliases(new_cls):
+def map_method_aliases(new_cls: Type) -> Type:
+    """Map method aliases for a new class."""
     method_aliases = {
         "validate_python": "model_validate",
         "validate_json": "model_validate_json",

@@ -1,10 +1,11 @@
-from typing import Type
+from typing import Type, Dict, Any
 from django.db import models
 
 
 def build_relation_schema_options(
     model: Type[models.Model], many: bool = False, nullable: bool = True
-):
+) -> Dict[str, Any]:
+    """Build schema options for a relation field."""
     return {
         "format": "select2",
         "model": f"{model._meta.app_label}.{model.__name__}",
