@@ -25,13 +25,6 @@ class StructuredDescriptior(DeferredAttribute):
     field: "StructuredJSONField"
 
     def __set__(self, instance, value):
-        raw_attr = f"{self.field.attname}_raw"
-        if not hasattr(instance.__class__, raw_attr):
-            setattr(
-                instance.__class__,
-                raw_attr,
-                property(self.get_raw_data, self.set_raw_data, self.del_raw_data),
-            )
         instance.__dict__[self.field.attname] = value
 
     def __get__(self, instance, cls=None):
@@ -40,15 +33,6 @@ class StructuredDescriptior(DeferredAttribute):
             value = self.field.schema.validate_python(value)
             self.__set__(instance, value)
         return value
-
-    def get_raw_data(self, instance):
-        return self.field.__raw_data
-
-    def set_raw_data(self, instance, value):
-        instance.__dict__[self.field.attname] = value
-
-    def del_raw_data(self, instance):
-        del instance.__dict__[self.field.attname]
 
 
 class StructuredJSONField(JSONField):
@@ -145,3 +129,22 @@ class StructuredJSONField(JSONField):
                 **kwargs,
             }
         )
+
+    def contribute_to_class(self, cls, name, private_only=False):
+        super().contribute_to_class(cls, name, private_only)
+        if "%s_raw" % self.name not in cls.__dict__:
+            setattr(
+                cls,
+                "%s_raw" % self.name,
+                property(self.__get_raw_data, self.__set_raw_data, self.__del_raw_data),
+            )
+
+    def __get_raw_data(self, instance):
+        return self.__raw_data
+
+    def __set_raw_data(self, instance, value):
+        self.__raw_data = value
+        instance.__dict__[self.attname] = value
+
+    def __del_raw_data(self, instance):
+        del instance.__dict__[self.attname]
