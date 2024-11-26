@@ -1,5 +1,5 @@
 from inspect import isclass
-from typing import Any, ForwardRef, Generic, Type, List, Optional
+from typing import Any, ForwardRef, Generic, Type, List, Tuple, Optional
 from typing_extensions import TypeVar, get_args
 from django.core.exceptions import ImproperlyConfigured
 
@@ -15,7 +15,7 @@ class LazyType:
         module, type_name = self._evaluate_path(self.path, base_cls)
         return self._import(module, type_name)
 
-    def _evaluate_path(self, relative_path: str, base_cls: Type) -> tuple[str, str]:  # pragma: no cover
+    def _evaluate_path(self, relative_path: str, base_cls: Type) -> Tuple[str, str]:  # pragma: no cover
         base_module = base_cls.__module__
         modules = self._get_modules(relative_path, base_module)
         type_name = modules.pop()
