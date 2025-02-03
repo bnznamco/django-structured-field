@@ -2,6 +2,13 @@
 
 
 
+## v0.4.1 (2025-02-03)
+
+### Fix
+
+* fix: added structured/contrib in MANIFEST ([`2a20044`](https://github.com/bnznamco/django-structured-field/commit/2a20044a8ce93d01a97b86b6acaf24a4447b2196))
+
+
 ## v0.4.0 (2024-11-26)
 
 ### Chore
