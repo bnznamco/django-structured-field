@@ -1,7 +1,8 @@
 import { defineUserConfig } from 'vuepress'
 import { defaultTheme } from '@vuepress/theme-default'
 import { viteBundler } from '@vuepress/bundler-vite'
-import { getSidebar } from './compose-sidenav'
+import { staticSidebar } from './staticSidebar'
+// import { getSidebar } from './compose-sidenav'
 
 export default defineUserConfig({
   lang: 'en-US',
@@ -13,8 +14,10 @@ export default defineUserConfig({
     navbar: [
       { text: 'Home', link: '/' },
       { text: 'How to', link: '/Guide/How%20to/' },
+      { text: 'Quickstart', link: '/Guide/QuickStart/' },
     ],
-    sidebar: getSidebar(),
+    // sidebar: getSidebar(),
+    sidebar: staticSidebar,
     repo: 'bnznamco/django-structured-field',
     smoothScroll: true,
     logo: '/images/logo.svg',
