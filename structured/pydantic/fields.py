@@ -71,8 +71,11 @@ class ForeignKey(Generic[T]):
 
         def serialize_data(instance, info):
             if info.mode == "python":
-                serializer = build_standard_model_serializer(model_class, depth=1)
-                return serializer(instance=instance).data
+                serializer_class = model_class
+                if instance:
+                    serializer_class = getattr(instance, "__class__", serializer_class)
+                serializer = build_standard_model_serializer(serializer_class, depth=1)
+                return instance and serializer(instance=instance).data
             if isinstance(instance, ValueWithCache):
                 instance = instance.retrieve()
             return minimal_serialization(instance)
