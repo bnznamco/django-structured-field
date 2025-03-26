@@ -235,6 +235,6 @@ Note that search on JSON fields may have limitations depending on your database.
 ## 🔄 Next Steps
 
 After mastering admin integration, you might want to explore:
-- [🌍 REST Framework Integration](../REST%20Framework%20Integration) for API endpoints
-- [⚡ Caching](../Caching) for optimizing admin performance
-- [🔗 Relationships](../Relationships) for more complex data structures 
+- [🌍 REST Framework Integration](../REST%20Framework%20Integration/README.md) for API endpoints
+- [⚡ Caching](../Caching/README.md) for optimizing admin performance
+- [🔗 Relationships](../Relationships/README.md) for more complex data structures 

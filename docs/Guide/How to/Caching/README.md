@@ -185,6 +185,6 @@ STRUCTURED_FIELD = {
 ## 🔄 Next Steps
 
 After understanding caching, you might want to explore:
-- [🌍 REST Framework Integration](../REST%20Framework%20Integration) for API optimization
-- [🔗 Relationships](../Relationships) for complex data structures
-- [🧰 Admin Integration](../Admin%20Integration) for admin interface optimization 
+- [🌍 REST Framework Integration](../REST%20Framework%20Integration/README.md) for API optimization
+- [🔗 Relationships](../Relationships/README.md) for complex data structures
+- [🧰 Admin Integration](../Admin%20Integration/README.md) for admin interface optimization 

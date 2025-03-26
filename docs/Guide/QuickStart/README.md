@@ -62,7 +62,7 @@ INSTALLED_APPS = [
 ```python
 # myapp/models.py
 from django.db import models
-from pydantic import BaseModel
+from structured.pydantic.models import BaseModel
 from structured.fields import StructuredJSONField
 
 class UserProfile(BaseModel):
@@ -98,4 +98,4 @@ python manage.py runserver
 - 🎛️ The admin interface provides a user-friendly editor for your structured fields
 - 🌐 For API development, the field integrates seamlessly with Django REST Framework
 
-For more advanced usage examples and features, check out the [documentation](docs/README.md).
+For more advanced usage examples and features, check out the [How to](../How%20to/README.md).

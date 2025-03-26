@@ -136,6 +136,6 @@ print(instance.structured_data.child.name)  # "Child"
 ## 🔄 Next Steps
 
 After mastering basic usage, you might want to explore:
-- [🔗 Relationships](../Relationships)
-- [🧰 Admin Integration](../Admin%20Integration)
-- [🌍 REST Framework Integration](../REST%20Framework%20Integration) 
+- [🔗 Relationships](../Relationships/README.md)
+- [🧰 Admin Integration](../Admin%20Integration/README.md)
+- [🌍 REST Framework Integration](../REST%20Framework%20Integration/README.md) 

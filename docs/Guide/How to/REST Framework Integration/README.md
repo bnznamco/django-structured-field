@@ -220,6 +220,6 @@ def get_my_models(request):
 ## 🔄 Next Steps
 
 After mastering REST Framework integration, you might want to explore:
-- [⚡ Caching](../Caching) for optimizing API performance
-- [🔗 Relationships](../Relationships) for more complex data structures
-- [🧰 Admin Integration](../Admin%20Integration) for managing data through the admin interface 
+- [⚡ Caching](../Caching/README.md) for optimizing API performance
+- [🔗 Relationships](../Relationships/README.md) for more complex data structures
+- [🧰 Admin Integration](../Admin%20Integration/README.md) for managing data through the admin interface 

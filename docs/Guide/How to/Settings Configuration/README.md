@@ -168,17 +168,6 @@ def test_with_shared_cache():
 ## 🔄 Next Steps
 
 After configuring settings, you might want to explore:
-- [⚡ Caching](../Caching) for more details on how caching works
-- [🔗 Relationships](../Relationships) for working with related models
-- [🌐 REST Framework Integration](../REST%20Framework%20Integration) for API configuration
-
-## 📝 Complete Configuration Example
-Here's a complete example with all available settings:
-```python
-STRUCTURED_FIELD = {
-    'CACHE': {
-        'ENABLED': True,  # Enable cache for performance (default)
-        'SHARED': False   # Use standard cache mode (default, recommended)
-    }
-}
-``` 
+- [⚡ Caching](../Caching/README.md) for more details on how caching works
+- [🔗 Relationships](../Relationships/README.md) for working with related models
+- [🌐 REST Framework Integration](../REST%20Framework%20Integration/README.md) for API configuration

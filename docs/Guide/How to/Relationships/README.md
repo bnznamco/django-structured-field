@@ -322,6 +322,6 @@ child_qs_count = model_instance.structured_data.child.qs_field.count()
 ## Next Steps
 
 After understanding relationships, you might want to explore:
-- [Admin Integration](../Admin%20Integration) for managing relationships in the Django admin
-- [REST Framework Integration](../REST%20Framework%20Integration) for API endpoints
-- [Caching](../Caching) for optimizing relationship queries 
+- [Admin Integration](../Admin%20Integration/README.md) for managing relationships in the Django admin
+- [REST Framework Integration](../REST%20Framework%20Integration/README.md) for API endpoints
+- [Caching](../Caching/README.md) for optimizing relationship queries 
