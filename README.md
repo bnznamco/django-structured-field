@@ -1,4 +1,4 @@
-# Django Structured JSON Field [![PyPI](https://img.shields.io/pypi/v/django-structured-json-field?style=flat-square)](https://pypi.org/project/django-structured-json-field) ![Codecov](https://img.shields.io/codecov/c/github/bnznamco/django-structured-field?style=flat-square&logo=codecov&logoSize=auto&cacheSeconds=0) ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/lotrekagency/django-structured-field/ci.yml?style=flat-square) [![GitHub](https://img.shields.io/github/license/lotrekagency/django-structured-field?style=flat-square)](./LICENSE)
+# Django Structured JSON Field [![PyPI](https://img.shields.io/pypi/v/django-structured-json-field?style=flat-square)](https://pypi.org/project/django-structured-json-field) ![Codecov](https://img.shields.io/codecov/c/github/bnznamco/django-structured-field?style=flat-square&logo=codecov&logoSize=auto&cacheSeconds=0) ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/lotrekagency/django-structured-field/ci.yml?style=flat-square) [![GitHub](https://img.shields.io/github/license/lotrekagency/django-structured-field?style=flat-square)](./LICENSE) [![Docs](https://img.shields.io/badge/docs-online-brightgreen?style=flat-square)](https://bnznamco.github.io/django-structured-field/)
 
 This is a Django field that allows you to declare the structure of a JSON field and validate it.
 
@@ -9,6 +9,20 @@ This is a Django field that allows you to declare the structure of a JSON field 
 - Use relationships between models inside the JSON field 🤯
 - Easily integrate with Django Rest Framework serializers
 - Admin editor for the JSON field with autocomplete search for related models 👀
+
+
+## Documentation
+
+Check out our [documentation](https://bnznamco.github.io/django-structured-field/) for detailed guides and examples on:
+
+- Installation and basic usage
+- Working with relationships
+- Admin integration
+- REST Framework integration
+- Caching
+- Settings configuration
+
+
 
 ## Installation
 

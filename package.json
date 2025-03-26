@@ -3,13 +3,18 @@
   "version": "1.0.0",
   "scripts": {
     "build": "NODE_ENV=production rollup -c",
-    "dev": "rollup -c -w"
+    "dev": "rollup -c -w",
+    "docs:dev": "vuepress dev docs",
+    "docs:build": "vuepress build docs",
+    "docs:publish": "./docs/.vuepress/publishDOCS.sh"
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",
     "rollup": "^4.9.1",
     "rollup-plugin-scss": "^4.0.0",
-    "sass": "^1.69.7"
+    "sass": "^1.69.7",
+    "vuepress": "^1.9.9",
+    "vuepress-theme-succinct": "^1.7.2"
   },
   "dependencies": {
     "@json-editor/json-editor": "^2.15.2"
