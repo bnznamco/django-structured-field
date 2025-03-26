@@ -1,6 +1,7 @@
 {
   "name": "structured-json-form-field",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "build": "NODE_ENV=production rollup -c",
     "dev": "rollup -c -w",
@@ -10,11 +11,14 @@
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",
+    "@vuepress/bundler-vite": "^2.0.0-rc.20",
+    "@vuepress/client": "^2.0.0-rc.20",
+    "@vuepress/theme-default": "^2.0.0-rc.87",
     "rollup": "^4.9.1",
     "rollup-plugin-scss": "^4.0.0",
     "sass": "^1.69.7",
-    "vuepress": "^1.9.9",
-    "vuepress-theme-succinct": "^1.7.2"
+    "vue": "^3.5.13",
+    "vuepress": "2.0.0-rc.20"
   },
   "dependencies": {
     "@json-editor/json-editor": "^2.15.2"
