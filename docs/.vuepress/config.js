@@ -5,7 +5,7 @@ import { getSidebar } from './compose-sidenav'
 
 export default defineUserConfig({
   lang: 'en-US',
-  title: "Django Structured JSON Field",
+  title: "Structured JSON Field",
   description: "Structured JSON Field for Django",
   base: '/django-structured-field/',
   bundler: viteBundler(),
@@ -17,6 +17,8 @@ export default defineUserConfig({
     sidebar: getSidebar(),
     repo: 'bnznamco/django-structured-field',
     smoothScroll: true,
+    logo: '/images/logo.svg',
+    logoDark: '/images/logo-dark.svg',
   }),
   head: [
     ['link', { rel: "icon", href: "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📑</text></svg>" }],

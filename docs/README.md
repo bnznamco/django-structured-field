@@ -1,6 +1,7 @@
 ---
 home: true
 heroImage: /images/logo.svg
+heroImageDark: /images/logo-dark.svg
 heroText: Django Structured JSON Field
 tagline: A powerful and flexible JSON field for Django that supports structured data validation and form generation
 actions:
