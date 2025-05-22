@@ -4,6 +4,7 @@ from rest_framework.utils import model_meta
 from typing import TYPE_CHECKING, Union, List
 
 from structured.fields import StructuredJSONField as DjangoStructuredJSONField
+from structured.utils.dict import dict_merge
 from structured.utils.errors import map_pydantic_errors
 
 
@@ -40,6 +41,11 @@ class StructuredJSONField(serializers.JSONField):
 
     def to_internal_value(self, data: Union[list, dict]):
         try:
+            request = self.context.get('request')
+            is_patch = request and request.method == 'PATCH'
+            if is_patch and getattr(self.parent, "instance", None):
+                old_data = getattr(self.parent.instance, self.field_name, None) or {}
+                data = dict_merge(old_data.model_dump(exclude_unset=True) if old_data else {}, data)
             return self.schema.validate_python(super().to_internal_value(data))
         except PydanticValidationError as e:
             raise serializers.ValidationError(map_pydantic_errors(e, self.many))
@@ -60,5 +66,4 @@ class StructuredModelSerializer(FieldsOverrideMixin, serializers.ModelSerializer
     """
     This serializer allows to serialize and deserialize structured data.
     """
-
     pass
