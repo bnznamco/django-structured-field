@@ -1,14 +1,12 @@
 from typing import Any, Dict, Tuple, Optional, Type
-from pydantic._internal._typing_extra import (
-    parent_frame_namespace,
-    merge_cls_and_parent_ns,
-)
+from pydantic._internal._typing_extra import parent_frame_namespace
 from pydantic._internal._generics import PydanticGenericMetadata
 from pydantic._internal._model_construction import ModelMetaclass, build_lenient_weakvaluedict
 from pydantic import BaseModel as PyDBaseModel
 from structured.utils.pydantic import map_method_aliases, patch_annotation
 from abc import ABCMeta
 from structured.cache import CacheEngine, CacheEnabledModel
+from structured.utils.namespace import merge_cls_and_parent_ns
 
 
 class BaseModelMeta(ModelMetaclass):
