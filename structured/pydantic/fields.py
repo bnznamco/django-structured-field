@@ -148,7 +148,7 @@ class QuerySet(Generic[T]):
             pk_attname = get_mclass()._meta.pk.attname
             return validate_from_pk_list([data[pk_attname] for data in values])
 
-        optional_field = cs.typed_dict_field(cs.nullable_schema(cs.str_schema()))
+        optional_field = cs.typed_dict_field(cs.str_schema(), required=False)
         from_dict_list_schema = cs.chain_schema(
             [
                 cs.list_schema(
