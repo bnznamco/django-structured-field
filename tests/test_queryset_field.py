@@ -22,6 +22,69 @@ def test_queryset_field(setting_fixture):
     assert instance.structured_data.age == 42
     assert instance.structured_data.qs_field.count() == len(names)
 
+# Can create a TestSchema object with a QuerySet field using pk list validation
+@pytest.mark.django_db
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
+def test_queryset_field_pk_list_validation(setting_fixture):
+    from tests.app.test_module.models import SimpleRelationModel, TestModel
+    names = ["test1", "test2", "test3", "test4", "test5"]
+    SimpleRelationModel.objects.bulk_create(
+        [SimpleRelationModel(name=name) for name in names]
+    )
+    instance = TestModel.objects.create(
+        title="test",
+        structured_data={
+            "name": "John",
+            "age": 42,
+            "qs_field": [model.pk for model in SimpleRelationModel.objects.filter(name__in=names)], 
+        }
+    )
+    assert instance.structured_data.name == "John"
+    assert instance.structured_data.age == 42
+    assert instance.structured_data.qs_field.count() == len(names)
+
+# Can create a TestSchema object with a QuerySet field using dict validation
+@pytest.mark.django_db
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
+def test_queryset_field_dict_validation(setting_fixture):
+    from tests.app.test_module.models import SimpleRelationModel, TestModel
+    names = ["test1", "test2", "test3", "test4", "test5"]
+    SimpleRelationModel.objects.bulk_create(
+        [SimpleRelationModel(name=name) for name in names]
+    )
+    instance = TestModel.objects.create(
+        title="test",
+        structured_data={
+            "name": "John",
+            "age": 42,
+            "qs_field": [{"name": model.name, "id": model.pk, "extra": "something"} for model in SimpleRelationModel.objects.filter(name__in=names)],
+        }
+    )
+    assert instance.structured_data.name == "John"
+    assert instance.structured_data.age == 42
+    assert instance.structured_data.qs_field.count() == len(names)
+    
+# Can create a TestSchema object with a QuerySet field using model list validation
+@pytest.mark.django_db
+@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
+def test_queryset_field_model_list_validation(setting_fixture):
+    from tests.app.test_module.models import SimpleRelationModel, TestModel
+    names = ["test1", "test2", "test3", "test4", "test5"]
+    SimpleRelationModel.objects.bulk_create(
+        [SimpleRelationModel(name=name) for name in names]
+    )
+    instance = TestModel.objects.create(
+        title="test",
+        structured_data={
+            "name": "John",
+            "age": 42,
+            "qs_field": [model for model in SimpleRelationModel.objects.filter(name__in=names)],
+        }
+    )
+    assert instance.structured_data.name == "John"
+    assert instance.structured_data.age == 42
+    assert instance.structured_data.qs_field.count() == len(names)
+
 
 # TestSchema with QuerySet field mantains the order of the given QuerySet
 @pytest.mark.django_db
@@ -115,3 +178,6 @@ def test_queryset_field_edit(setting_fixture):
     assert set(instance.structured_data.qs_field.values_list("name", flat=True)) == set(
         names
     )
+
+
+
