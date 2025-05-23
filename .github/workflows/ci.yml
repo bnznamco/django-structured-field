@@ -19,6 +19,10 @@ jobs:
             django-version: "5.1"
           - python-version: "3.8" # Python 3.8 is not supported by Django 5.1
             django-version: "5.1"
+          - python-version: "3.9" # Python 3.9 is not supported by Django 5.1
+            django-version: "5.2"
+          - python-version: "3.8" # Python 3.8 is not supported by Django 5.1
+            django-version: "5.2"
             
     name: 🦠 Test on Python ${{ matrix.python-version }} with Django ${{ matrix.django-version }}
 
