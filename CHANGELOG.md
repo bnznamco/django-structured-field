@@ -2,6 +2,47 @@
 
 
 
+## v0.4.2 (2025-05-23)
+
+### Chore
+
+* chore: drop support for django 3.2 ([`7a3bb81`](https://github.com/bnznamco/django-structured-field/commit/7a3bb81e668592e885fb97423dc936f131f1bb05))
+
+* chore: drop support for django 3.2 ([`bf080d2`](https://github.com/bnznamco/django-structured-field/commit/bf080d262c14709a1be238e7ce0cafe28c033309))
+
+* chore: updated logo ([`91d1b58`](https://github.com/bnznamco/django-structured-field/commit/91d1b5832b16804ab4d1ae3fff7b7d30fce79e97))
+
+### Documentation
+
+* docs: remove edit links ([`91b1cba`](https://github.com/bnznamco/django-structured-field/commit/91b1cbae5d26ceb28baf1526956d409fdc20a8bd))
+
+* docs: fix home button hover style ([`fd27d50`](https://github.com/bnznamco/django-structured-field/commit/fd27d505ce7f9a0e047b1655773bf0a9a0777b75))
+
+* docs: update contents ([`695f3a5`](https://github.com/bnznamco/django-structured-field/commit/695f3a53d7ba8180183e8cb2e0cabcd2ffbd0893))
+
+* docs: update changelog ([`21b7249`](https://github.com/bnznamco/django-structured-field/commit/21b72492faf4fc492e141d2d8c81ac7ad7a92f78))
+
+* docs: switch to static sidebar to better organize content ([`be525d7`](https://github.com/bnznamco/django-structured-field/commit/be525d755445632f12ff690edfb3b075b2be8c4f))
+
+* docs: updated to vuepress 2 ([`a03b155`](https://github.com/bnznamco/django-structured-field/commit/a03b155355b11640e5a70a3df3068c393c90f6b1))
+
+* docs: added github-pages docs ([`853b759`](https://github.com/bnznamco/django-structured-field/commit/853b7590c1e47d887ae5c09c54d82094e5b20d66))
+
+### Fix
+
+* fix: fix pydantic &gt;= 2.10 compatibility ([`89d5a36`](https://github.com/bnznamco/django-structured-field/commit/89d5a3671c08b6dfa776044af1601c4ea7e1d6e0))
+
+* fix: fix queryset field requiring &#39;name&#39; and &#39;model&#39; fields in dict validation ([`ede98d5`](https://github.com/bnznamco/django-structured-field/commit/ede98d5ffad5cec17f54df095c54037760e47260))
+
+* fix(foreignkey): fix foreignkey serialize_data abstract model serializer class discovery ([`a15d33e`](https://github.com/bnznamco/django-structured-field/commit/a15d33ea0653f8c58c71dfe5272e0040c4b4af96))
+
+### Unknown
+
+* feature: handle partial updates during django rest framework PATCH request ([`57e778b`](https://github.com/bnznamco/django-structured-field/commit/57e778b13cead8595a3af94184f0d78fe4cf4eaa))
+
+* tests: update queryset tests to check more validations cases ([`04359fd`](https://github.com/bnznamco/django-structured-field/commit/04359fd8b24d1ee6dbacdafdcf04af3eef9768d9))
+
+
 ## v0.4.1 (2025-02-03)
 
 ### Fix
