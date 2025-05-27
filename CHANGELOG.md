@@ -2,6 +2,17 @@
 
 
 
+## v0.4.3 (2025-05-27)
+
+### Fix
+
+* fix(drf): fix drf serialization for Fk and Qs fields ([`4199fc7`](https://github.com/bnznamco/django-structured-field/commit/4199fc74f1b394838983153e7be7f188196837e7))
+
+### Refactor
+
+* refactor: separate qs and fk fields ([`9f3380e`](https://github.com/bnznamco/django-structured-field/commit/9f3380e815ac8dace686d030b992d52806cf6821))
+
+
 ## v0.4.2 (2025-05-23)
 
 ### Chore
