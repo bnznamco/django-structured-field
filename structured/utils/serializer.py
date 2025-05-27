@@ -10,8 +10,8 @@ class BaseModelSerializer(serializers.ModelSerializer):
         """Get the model name of the object."""
         return f"{obj._meta.app_label}.{obj._meta.model_name}"
 
-    def get_field_names(self, declared_fields, info):
-        original = super().get_field_names(declared_fields, info)
+    def get_default_field_names(self, declared_fields, info):
+        original = super().get_default_field_names(declared_fields, info)
         if "model" not in original:
             original = ["model"] + original
         return original
