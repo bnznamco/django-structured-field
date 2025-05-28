@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, ForwardRef, get_origin, get_args
+from typing import Any, Dict, List, Type, ForwardRef, get_origin, get_args, Literal
 from structured.pydantic.fields import ForeignKey, QuerySet
 from django.db.models import Model as DjangoModel
 from django.db.models.query import QuerySet as DjangoQuerySet
@@ -14,6 +14,8 @@ def patch_annotation(annotation: Any, cls_namespace: Dict[str, Any]) -> Any:
     if isinstance(annotation, str):
         annotation = eval_type_lenient(annotation, cls_namespace)
     origin = get_origin(annotation)
+    if origin == Literal:
+        return annotation
     args = get_args(annotation)
     if origin == ForwardRef:
         return patch_annotation(eval_type_lenient(annotation, cls_namespace), cls_namespace)
