@@ -2,7 +2,7 @@ from typing import Any, Dict, Tuple, Optional, Type
 from pydantic._internal._typing_extra import parent_frame_namespace
 from pydantic._internal._generics import PydanticGenericMetadata
 from pydantic._internal._model_construction import ModelMetaclass, build_lenient_weakvaluedict
-from pydantic import BaseModel as PyDBaseModel
+from pydantic import ConfigDict, BaseModel as PyDBaseModel
 from structured.utils.pydantic import map_method_aliases, patch_annotation
 from abc import ABCMeta
 from structured.cache import CacheEngine, CacheEnabledModel
@@ -59,4 +59,4 @@ class BaseModelMeta(ModelMetaclass):
 
 
 class BaseModel(CacheEnabledModel, PyDBaseModel, metaclass=BaseModelMeta):
-    pass
+    model_config = ConfigDict(extra='ignore')
