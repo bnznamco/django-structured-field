@@ -1,9 +1,9 @@
-from typing import Optional, List
+from typing import Optional, List, Union, Literal, Annotated, ForwardRef
 from django.db import models
 from structured.fields import StructuredJSONField
 from structured.pydantic.fields import ForeignKey, QuerySet
 from structured.pydantic.models import BaseModel
-
+from pydantic import Field
 
 class AbstractModel(models.Model):
     common_field = models.CharField(max_length=255)
@@ -34,8 +34,9 @@ class SimpleRelationModel(models.Model):
 
 
 class TestSchema(BaseModel):
+    type: Literal["schema1"] = "schema1"
     name: str
-    age: int = None
+    age: int = 0
     child: Optional["TestSchema"] = None
     childs: List["TestSchema"] = []
     fk_field: SimpleRelationModel = None
@@ -44,13 +45,33 @@ class TestSchema(BaseModel):
 
 
 def init_schema():
-    return TestSchema(name="")
+    return TestSchema(name="", type="schema1")
+
+
+class TestSchema2(BaseModel):
+    type: Literal["schema2"] = "schema2"
+    name_2: str
+    age_2: int = 0
+    child_2: Optional["TestSchema"] = None
+    childs_2: List["TestSchema"] = Field(default_factory=list)
+    fk_field_2: SimpleRelationModel = None
+    qs_field_2: QuerySet[SimpleRelationModel]
+    abstract_fk_2: ForeignKey[AbstractModel] = None
+
+
+class UnionSchema(BaseModel):
+    data: Union[TestSchema, TestSchema2] = Field(discriminator='type')
+
+
+def init_union_schema():
+    return {"data": {"name": "", "type": "schema1"}}
 
 
 class TestModel(models.Model):
     title = models.CharField(max_length=255)
     structured_data = StructuredJSONField(schema=TestSchema, default=init_schema)
     structured_data_list = StructuredJSONField(schema=TestSchema, default=list)
+    structured_data_union = StructuredJSONField(schema=UnionSchema, default=init_union_schema)
 
     def __str__(self) -> str:
         return self.title

@@ -193,6 +193,59 @@ class TestRestFramework:
         assert self.relation1.pk in [obj.pk for obj in self.test_model.structured_data.qs_field]
         assert self.relation2.pk in [obj.pk for obj in self.test_model.structured_data.qs_field]
 
+    def test_union_schema_field(self):
+        """Test creating, retrieving, and updating a model with union schema in structured_data_union"""
+        # Create with TestSchema
+        create_data = {
+            "title": "Union Model",
+            "structured_data": {
+                "type": "schema1",
+                "name": "Union Name",
+                "age": 22,
+                "qs_field": [self.relation1.pk],
+                "fk_field": self.relation1.pk
+            },
+            "structured_data_union": {
+                "data": {
+                    "type": "schema1",
+                    "name": "Union TestSchema",
+                    "age": 50,
+                    "qs_field": [self.relation1.pk],
+                    "fk_field": self.relation1.pk
+                }
+            }
+        }
+        response = self.client.post("/api/testmodels/", create_data, format="json")
+        assert response.status_code == 201
+        created_id = response.json()["id"]
+        # Retrieve and check
+        response = self.client.get(f"/api/testmodels/{created_id}/")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["structured_data_union"]["data"]["name"] == "Union TestSchema"
+        assert data["structured_data_union"]["data"]["age"] == 50
+        # Update with TestSchema2
+        update_data = {
+            "title": "Union Model Updated",
+            "structured_data_union": {
+                "data": {
+                    "type": "schema2",
+                    "name_2": "Union TestSchema2",
+                    "age_2": 60,
+                    "qs_field_2": [self.relation2.pk],
+                    "fk_field_2": self.relation2.pk
+                }
+            }
+        }
+        response = self.client.patch(f"/api/testmodels/{created_id}/", update_data, format="json")
+        assert response.status_code == 200
+        # Retrieve and check updated
+        response = self.client.get(f"/api/testmodels/{created_id}/")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["structured_data_union"]["data"]["name_2"] == "Union TestSchema2"
+        assert data["structured_data_union"]["data"]["age_2"] == 60
+
 
 
 

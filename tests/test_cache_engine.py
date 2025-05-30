@@ -34,7 +34,7 @@ def test_heavy_nested_foreign_key_field(setting_fixture, django_assert_num_queri
 
     TestModel.objects.create(title="test", structured_data=data)
 
-    with django_assert_num_queries(1):
+    with django_assert_num_queries(1) as operation:
         instance = TestModel.objects.first()
     n_query = 0 if settings.STRUCTURED_FIELD_SHARED_CACHE else 1
     if not settings.STRUCTURED_FIELD_CACHE_ENABLED:

@@ -6,4 +6,4 @@ from tests.app.test_module.models import TestModel
 class TestModelSerializer(StructuredModelSerializer):
     class Meta:
         model = TestModel
-        fields = ["id", "title", "structured_data", "structured_data_list"]
+        fields = "__all__"
