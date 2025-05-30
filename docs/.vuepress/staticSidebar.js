@@ -27,6 +27,12 @@ export const staticSidebar = [
             children: []
           },
           {
+            text: 'Migrate Data',
+            link: '/Guide/How to/Migrate Data/',
+            collapsible: false,
+            children: []
+          },
+          {
             text: 'Relationships',
             link: '/Guide/How to/Relationships/',
             collapsible: false,
