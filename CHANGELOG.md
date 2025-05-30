@@ -2,6 +2,45 @@
 
 
 
+## v0.5.0 (2025-05-30)
+
+### Chore
+
+* chore: update test app migrations ([`ec06577`](https://github.com/bnznamco/django-structured-field/commit/ec06577a363512fb2e9d94ea18732101f3ce0868))
+
+* chore: increase logging level in test app ([`77ec645`](https://github.com/bnznamco/django-structured-field/commit/77ec6452ab2fac76592c941daea587ef78e1c42e))
+
+* chore: added some logging to the admin widget to better debug admin panel errors ([`d5d5067`](https://github.com/bnznamco/django-structured-field/commit/d5d50675d831b2a9281714de302431e5355b7979))
+
+* chore: added some debug logging in pydantic model patching to debug better the process of field patching ([`96f57c0`](https://github.com/bnznamco/django-structured-field/commit/96f57c02511720b338ef23ab76ca6b28befc7673))
+
+### Documentation
+
+* docs: added documentation of data migration ([`498a910`](https://github.com/bnznamco/django-structured-field/commit/498a910954f91d1d70a134ea45a10670481def98))
+
+### Feature
+
+* feat(migrations): added command to generate database migrations for structured fields ([`cd29144`](https://github.com/bnznamco/django-structured-field/commit/cd2914468cd9637db0f89bd55fe0514aa5652456))
+
+* feat(core): added `ConfigDict(extra=&#39;ignore&#39;)` to ignore extra keys from validation. This helps with db validation issues when removing keys. ([`eda841f`](https://github.com/bnznamco/django-structured-field/commit/eda841fd12faa360a25ef288021d86ba38043840))
+
+### Fix
+
+* fix: model validation when model is actually already validated ([`0b0f4da`](https://github.com/bnznamco/django-structured-field/commit/0b0f4da78c4dcd594d56eb6360fb1887135110c9))
+
+* fix(field): fix DB save with direct python dict reference, casting to model during value preparation ([`91ec4ef`](https://github.com/bnznamco/django-structured-field/commit/91ec4efe618865dd604172656634ab46309112f7))
+
+* fix(literals): fix literals future annotations ([`732a7fe`](https://github.com/bnznamco/django-structured-field/commit/732a7fe7ac0a8a6f3e4203c790286db420954c0d))
+
+### Unknown
+
+* tests: removed unused typing imports ([`180b444`](https://github.com/bnznamco/django-structured-field/commit/180b4442fe25b8bdcff37a0143c7e41f3526b1a5))
+
+* Merge branch &#39;master&#39; into feature/dbvalidation ([`9b9befe`](https://github.com/bnznamco/django-structured-field/commit/9b9befeb9bd8070ab8de49477c054ed479f7f7d5))
+
+* tests: added Union of Models with field discriminator in testcases ([`f1e94bf`](https://github.com/bnznamco/django-structured-field/commit/f1e94bfeef6da7db72eef878bd286349f0d3bf9f))
+
+
 ## v0.4.3 (2025-05-27)
 
 ### Fix
