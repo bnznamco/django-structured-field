@@ -15,7 +15,9 @@ from structured.widget.fields import StructuredJSONFormField
 from pydantic import ValidationError as PydanticValidationError
 from typing_extensions import Annotated
 from pydantic.fields import Field
+import logging
 
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:  # pragma: no cover
     from structured.pydantic.models import BaseModel
@@ -46,6 +48,10 @@ class StructuredJSONField(JSONField):
         try:
             self.schema.validate_python(value)
         except PydanticValidationError as e:
+            logger.debug(
+                "[StructuredJSONField] Validation error: %s",
+                map_pydantic_errors(e, self.many),
+            )
             raise exceptions.ValidationError(
                 self.error_messages["invalid"],
                 code="invalid",
@@ -93,9 +99,17 @@ class StructuredJSONField(JSONField):
             )
         return isinstance(value, self.orig_schema)
 
+    def _cast_value(self, value: Any) -> Union[List[Type["BaseModel"]], Type["BaseModel"]]:
+        if isinstance(value, list):
+            value = [self.schema.validate_python(v) if isinstance(v, dict) else v for v in value]
+        elif isinstance(value, dict):
+            value = self.schema.validate_python(value)
+        return value
+
     def get_prep_value(
         self, value: Union[List[Type["BaseModel"]], Type["BaseModel"]]
     ) -> str:
+        value = self._cast_value(value)
         if isinstance(value, list) and self.many:
             return self.schema.dump_json(value, exclude_unset=True).decode()
         return value.model_dump_json(exclude_unset=True)
