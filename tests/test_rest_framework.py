@@ -2,6 +2,7 @@ import pytest
 from rest_framework.test import APIClient
 
 from tests.app.test_module.models import SimpleRelationModel, TestModel
+from tests.utils.media import load_asset_and_remove_media
 
 
 @pytest.mark.django_db
@@ -11,6 +12,10 @@ class TestRestFramework:
         # Create some related objects for testing
         self.relation1 = SimpleRelationModel.objects.create(name="Relation 1")
         self.relation2 = SimpleRelationModel.objects.create(name="Relation 2")
+        self.relation_with_file = SimpleRelationModel.objects.create(
+            name="Relation with File",
+            file=load_asset_and_remove_media("10595073.png")
+        )
         
         # Create a test model with structured data
         self.test_model = TestModel.objects.create(
@@ -20,7 +25,8 @@ class TestRestFramework:
                 "age": 30,
                 "child": {
                     "name": "Child Name",
-                    "age": 5
+                    "age": 5,
+                    "fk_field": self.relation_with_file.pk,
                 },
                 "childs": [
                     {"name": "Child 1", "age": 10},
@@ -44,7 +50,10 @@ class TestRestFramework:
         assert len(data["structured_data"]["childs"]) == 2
         assert data["structured_data"]["fk_field"]["id"] == self.relation1.pk
         assert self.relation1.pk in [el["id"] for el in data["structured_data"]["qs_field"]]
-    
+        assert data["structured_data"]["child"]["fk_field"]["id"] == self.relation_with_file.pk
+        assert data["structured_data"]["child"]["fk_field"]["file"] is not None
+        assert data["structured_data"]["child"]["fk_field"]["file"] == f"http://testserver/media/10595073.png"
+        
     def test_create_model(self):
         """Test creating a model with structured data"""
         new_model_data = {
@@ -245,7 +254,4 @@ class TestRestFramework:
         data = response.json()
         assert data["structured_data_union"]["data"]["name_2"] == "Union TestSchema2"
         assert data["structured_data_union"]["data"]["age_2"] == 60
-
-
-
 

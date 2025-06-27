@@ -28,6 +28,7 @@ class ChildModel2(AbstractModel):
 
 class SimpleRelationModel(models.Model):
     name = models.CharField(max_length=255)
+    file = models.FileField(blank=True, null=True)
 
     def __str__(self) -> str:
         return self.name
