@@ -1,7 +1,7 @@
 from typing import Any, Callable, Dict, Generic, TypeVar, Union, Type
 
 from django.db import models as django_models
-from pydantic import GetJsonSchemaHandler
+from pydantic import GetJsonSchemaHandler, SerializationInfo
 from pydantic_core import core_schema as cs
 from pydantic.json_schema import JsonSchemaValue
 from structured.utils.options import build_relation_schema_options
@@ -68,13 +68,13 @@ class ForeignKey(Generic[T]):
             ]
         )
 
-        def serialize_data(instance, info):
+        def serialize_data(instance: Union[ValueWithCache, django_models.Model, None], info: SerializationInfo) -> Union[Dict[str, Any], None]:
             if info.mode == "python":
                 serializer_class = model_class
                 if instance:
                     serializer_class = getattr(instance, "__class__", serializer_class)
                 serializer = build_standard_model_serializer(serializer_class, depth=1)
-                return instance and serializer(instance=instance).data
+                return instance and serializer(instance=instance, context=info.context or {}).data
             if isinstance(instance, ValueWithCache):
                 instance = instance.retrieve()
             return minimal_serialization(instance)

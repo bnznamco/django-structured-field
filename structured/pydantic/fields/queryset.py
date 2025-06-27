@@ -92,10 +92,10 @@ class QuerySet(Generic[T]):
             ]
         )
 
-        def serialize_data(qs: django_models.QuerySet, info: SerializationInfo):
+        def serialize_data(qs: django_models.QuerySet, info: SerializationInfo) -> List[Dict[str, Any]]:
             if info.mode == "python":
                 serializer = build_standard_model_serializer(get_mclass(), depth=1)
-                return serializer(instance=qs, many=True).data
+                return serializer(instance=qs, many=True, context=info.context or {}).data
             return minimal_list_serialization(qs)
 
         return cs.json_or_python_schema(

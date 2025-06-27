@@ -35,9 +35,9 @@ class StructuredJSONField(serializers.JSONField):
     def to_representation(self, instance: Union["BaseModel", List["BaseModel"]]):
         if isinstance(instance, list) and self.many:
             return super().to_representation(
-                self.schema.dump_python(instance, exclude_unset=True)
+                self.schema.dump_python(instance, exclude_unset=True, context=self.context or {})
             )
-        return super().to_representation(instance.model_dump(exclude_unset=True))
+        return super().to_representation(instance.model_dump(exclude_unset=True, context=self.context))
 
     def to_internal_value(self, data: Union[list, dict]):
         try:
