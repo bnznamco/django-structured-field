@@ -2,6 +2,23 @@
 
 
 
+## v0.5.1 (2025-06-27)
+
+### Documentation
+
+* docs: update changelog ([`13bb8e4`](https://github.com/bnznamco/django-structured-field/commit/13bb8e44d5ccc53c89d0fe6b2ae1f71a4fcb3c12))
+
+* docs: update migrate data documentation ([`5619d14`](https://github.com/bnznamco/django-structured-field/commit/5619d14e23c4796700376bc1db965c035b47f71b))
+
+### Fix
+
+* fix: correctly resolve complete url in filefields inside structured relations ([`fbb6424`](https://github.com/bnznamco/django-structured-field/commit/fbb6424f764a9d35ff8d68571cd54711e2364a48))
+
+### Unknown
+
+* tests: add test to ensure correct absolute url building for filefields ([`6d384c6`](https://github.com/bnznamco/django-structured-field/commit/6d384c621bc906fdc1aaba91493578de7bafca55))
+
+
 ## v0.5.0 (2025-05-30)
 
 ### Chore
