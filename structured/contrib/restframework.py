@@ -43,7 +43,7 @@ class StructuredJSONField(serializers.JSONField):
         try:
             request = self.context.get('request')
             is_patch = request and request.method == 'PATCH'
-            if is_patch and getattr(self.parent, "instance", None):
+            if is_patch and getattr(self.parent, "instance", None) and not isinstance(data, list):
                 old_data = getattr(self.parent.instance, self.field_name, None) or {}
                 data = dict_merge(old_data.model_dump(exclude_unset=True) if old_data else {}, data)
             return self.schema.validate_python(super().to_internal_value(data))
