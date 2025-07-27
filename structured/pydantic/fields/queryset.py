@@ -92,6 +92,13 @@ class QuerySet(Generic[T]):
             ]
         )
 
+        from_none_schema = cs.chain_schema(
+            [
+                cs.none_schema(),
+                cs.no_info_plain_validator_function(lambda _: get_mclass()._default_manager.none()),
+            ]
+        )
+
         def serialize_data(qs: django_models.QuerySet, info: SerializationInfo) -> List[Dict[str, Any]]:
             if info.mode == "python":
                 serializer = build_standard_model_serializer(get_mclass(), depth=1)
@@ -101,6 +108,7 @@ class QuerySet(Generic[T]):
         return cs.json_or_python_schema(
             json_schema=cs.union_schema(
                 [
+                    from_none_schema,
                     from_cache_schema,
                     from_pk_list_schema,
                     from_dict_list_schema,
@@ -110,6 +118,7 @@ class QuerySet(Generic[T]):
             python_schema=cs.union_schema(
                 [
                     cs.is_instance_schema(django_models.QuerySet),
+                    from_none_schema,
                     from_cache_schema,
                     from_pk_list_schema,
                     from_dict_list_schema,
