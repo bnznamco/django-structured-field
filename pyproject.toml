@@ -50,3 +50,7 @@ prerelease = false
 match = "next"
 prerelease = true
 prerelease_token = "beta"
+
+[tool.semantic_release.changelog.default_templates]
+changelog_file = "CHANGELOG.md"
+output_format = "md"

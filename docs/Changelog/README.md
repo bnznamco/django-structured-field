@@ -1,5 +1,43 @@
 # CHANGELOG
 
+## v1.1.0 (2025-07-27)
+
+### Bug Fixes
+* Admit none in Queryset schema returning an empty queryset [`e686884`](https://github.com/bnznamco/django-structured-field/commit/e686884)
+
+* Fix args order preservation in recursive annotation list [`cebbdbe`](https://github.com/bnznamco/django-structured-field/commit/cebbdbe)
+
+* Fix future annotation evaluation in patch_annotation [`690a6e1`](https://github.com/bnznamco/django-structured-field/commit/690a6e1)
+
+### Chores
+* Drop support for python 3.8 [`49bd5d3`](https://github.com/bnznamco/django-structured-field/commit/49bd5d3)
+
+### Features
+* Added possibility to specify a custom serliazer for ForeignKey and QuerySet fields [`4605dd6`](https://github.com/bnznamco/django-structured-field/commit/4605dd6)
+
+## v1.0.0 (2025-07-23)
+
+### Bug Fixes
+* Ignore data merging for lists in DRF PATCH ([`#3`](https://github.com/bnznamco/django-structured-field/pull/3), [`17311fb`](https://github.com/bnznamco/django-structured-field/commit/17311fb))
+
+### Chores
+* Update semantic release to v10 ([`25e369b`](https://github.com/bnznamco/django-structured-field/commit/25e369b))
+
+## v0.5.1 (2025-06-27)
+
+### Documentation
+
+* docs: update changelog ([`13bb8e4`](https://github.com/bnznamco/django-structured-field/commit/13bb8e44d5ccc53c89d0fe6b2ae1f71a4fcb3c12))
+
+* docs: update migrate data documentation ([`5619d14`](https://github.com/bnznamco/django-structured-field/commit/5619d14e23c4796700376bc1db965c035b47f71b))
+
+### Fix
+
+* fix: correctly resolve complete url in filefields inside structured relations ([`fbb6424`](https://github.com/bnznamco/django-structured-field/commit/fbb6424f764a9d35ff8d68571cd54711e2364a48))
+
+### Unknown
+
+* tests: add test to ensure correct absolute url building for filefields ([`6d384c6`](https://github.com/bnznamco/django-structured-field/commit/6d384c621bc906fdc1aaba91493578de7bafca55))
 
 
 ## v0.5.0 (2025-05-30)
