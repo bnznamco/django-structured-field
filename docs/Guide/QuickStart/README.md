@@ -6,7 +6,7 @@ Here's a quick start guide to help you get started with the Django Structured JS
 
 ### 📋 Prerequisites
 
-- 🐍 Python >=3.8
+- 🐍 Python >=3.9
 - 🎯 Django >=4.2
 - 📦 Pydantic >=2.0
 

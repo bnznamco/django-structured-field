@@ -21,7 +21,7 @@ dynamic = ["version"]
 keywords = ["django", "pydantic", "django pydantic", "django json", "json schema", "django form"]
 license = {text = "MIT"}
 name = "django-structured-json-field"
-requires-python = ">= 3.8"
+requires-python = ">= 3.9"
 
 [project.readme]
 content-type = "text/markdown"
