@@ -49,9 +49,9 @@ def patch_annotation(annotation: Any, cls_namespace: Dict[str, Any]) -> Any:
             "[patch_annotation] Detected generic type (origin: %r) with args: %r, patching recursively.",
             origin, args
         )
-        new_args = set()
+        new_args = []
         for arg in args:
-            new_args.add(patch_annotation(arg, cls_namespace))
+            new_args.append(patch_annotation(arg, cls_namespace))
         args = tuple(new_args)
         if origin is list:
             origin = List
