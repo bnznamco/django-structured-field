@@ -1,4 +1,5 @@
-from typing import Annotated, Optional, List, Union, Literal
+from typing_extensions import Annotated
+from typing import Optional, List, Union, Literal
 from django.db import models
 from structured.fields import StructuredJSONField
 from structured.pydantic.fields import ForeignKey, QuerySet
