@@ -17,7 +17,9 @@ def patch_annotation(annotation: Any, cls_namespace: Dict[str, Any]) -> Any:
     """Patch the annotation to handle special cases for Django and Pydantic."""
     if isinstance(annotation, str):
         annotation = ForwardRef(annotation)
-        logger.debug("[patch_annotation] Need to evaluate string annotation: %r", annotation)
+        resolved = eval_type_lenient(annotation, cls_namespace)
+        logger.debug("[patch_annotation] Resolved string annotation: %r -> %r", annotation, resolved)
+        annotation = resolved
     origin = get_origin(annotation)
     if origin == Literal:
         logger.debug("[patch_annotation] Detected Literal, returning as is: %r", annotation)
