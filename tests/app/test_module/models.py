@@ -1,9 +1,20 @@
-from typing import Optional, List, Union, Literal
+from typing import Annotated, Optional, List, Union, Literal
 from django.db import models
 from structured.fields import StructuredJSONField
 from structured.pydantic.fields import ForeignKey, QuerySet
 from structured.pydantic.models import BaseModel
+from structured.pydantic.fields.serializer import FieldSerializer
+from rest_framework import serializers
 from pydantic import Field
+
+class CustomSimpleRelationModelSerializer(serializers.Serializer):
+    def to_representation(self, instance):
+        return {
+            "id": instance.id,
+            "name": instance.name,
+            "custom": "👻 I'm custom!"
+        }
+
 
 class AbstractModel(models.Model):
     common_field = models.CharField(max_length=255)
@@ -43,6 +54,8 @@ class TestSchema(BaseModel):
     fk_field: SimpleRelationModel = None
     qs_field: QuerySet[SimpleRelationModel]
     abstract_fk: ForeignKey[AbstractModel] = None
+    custom_serializer_fk: Annotated[SimpleRelationModel, FieldSerializer(CustomSimpleRelationModelSerializer)] = None
+    custom_serializer_qs: Annotated[QuerySet[SimpleRelationModel], FieldSerializer(CustomSimpleRelationModelSerializer, many=True)]
 
 
 def init_schema():

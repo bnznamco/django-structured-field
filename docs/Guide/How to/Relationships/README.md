@@ -240,6 +240,36 @@ first = model_instance.structured_data.qs_field.first()  # First alphabetically
 last = model_instance.structured_data.qs_field.last()    # Last alphabetically
 ```
 
+## 🪛 Custom Serializers for Foreign Keys and QuerySets
+
+You can define custom serializers for ForeignKey and QuerySet fields to control how they are serialized using `FieldSerializer`.
+
+You need to pass a valid `rest_framework` serializer class to the `FieldSerializer` to handle model serialization.
+
+```python
+from structured.pydantic.fields import ForeignKey, QuerySet
+from structured.pydantic.models import BaseModel
+from structured.pydantic.fields.serializer import FieldSerializer
+from rest_framework import serializers
+
+
+class CustomForeignKeySerializer(serializers.Serializer):
+    def to_representation(self, instance):
+        return {
+            "id": instance.id,
+            "name": instance.name,
+            "custom": "👻 I'm custom!"
+        }
+
+class MySchema(BaseModel):
+    name: str
+    age: int = None
+    custom_serializer_fk: Annotated[ForeignKey[SomeModel], FieldSerializer(CustomForeignKeySerializer)] = None
+    custom_serializer_qs: Annotated[QuerySet[SomeModel], FieldSerializer(CustomForeignKeySerializer, many=True)] 
+
+```
+
+
 ## 📦 Nested Relationships
 
 You can combine these relationship types in nested structures:
