@@ -3,6 +3,7 @@ from rest_framework.test import APIClient
 
 from tests.app.test_module.models import SimpleRelationModel, TestModel
 from tests.utils.media import load_asset_and_remove_media
+from .test_max_depth_recursion import recursive_get_child_model
 
 
 @pytest.mark.django_db
@@ -255,3 +256,43 @@ class TestRestFramework:
         assert data["structured_data_union"]["data"]["name_2"] == "Union TestSchema2"
         assert data["structured_data_union"]["data"]["age_2"] == 60
 
+
+    @pytest.mark.parametrize("recursion_depth_setting_fixture", [0, 1, 2, 3, 4, 5], indirect=True)
+    def test_recursion_depth(self, recursion_depth_setting_fixture):
+        """Test the maximum recursion depth for structured data"""
+        from structured.settings import settings
+
+        child4_instance = TestModel.objects.create(
+            title="child4", structured_data={"name": "Child 4", "age": 8}
+        )
+        child3_instance = TestModel.objects.create(
+            title="child3",
+            structured_data={"name": "Child 3", "age": 8},
+            structured_data_recursive={"child_model": child4_instance},
+        )
+        child2_instance = TestModel.objects.create(
+            title="child2",
+            structured_data={"name": "Child 2", "age": 12},
+            structured_data_recursive={"child_model": child3_instance},
+        )
+        child1_instance = TestModel.objects.create(
+            title="child1",
+            structured_data={"name": "Child 1", "age": 10},
+            structured_data_recursive={"child_model": child2_instance},
+        )
+        instance = TestModel.objects.create(
+            title="test",
+            structured_data={"name": "John", "age": 42},
+            structured_data_recursive={"child_model": child1_instance},
+        )
+
+        response = self.client.get(f"/api/testmodels/{instance.pk}/")
+        assert response.status_code == 200
+        
+        dumped_data = response.json()["structured_data_recursive"]
+
+        child_model_data = recursive_get_child_model(
+            dumped_data, settings.STRUCTURED_SERIALIZATION_MAX_DEPTH
+        )
+        
+        assert "structured_data_recursive" not in child_model_data

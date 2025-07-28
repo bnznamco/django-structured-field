@@ -5,7 +5,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
 from django.db import models as django_models
 from django.db.models.query import QuerySet
-from structured.utils.serializer import minimal_list_serialization
+from structured.utils.serializer import build_model_serializer
 from structured.utils.django import import_abs_model
 
 
@@ -57,8 +57,9 @@ def search(request, model):
         paginator = Paginator(results, 50)
         page = request.GET.get("page", 1)
         page_obj = paginator.get_page(page)
+        Serializer = build_model_serializer(None if model._meta.abstract else model)
         return JsonResponse({
-                "items": minimal_list_serialization(page_obj),
+                "items": Serializer(instance=page_obj, many=True, context={"mode": "json"}).data,
                 "more": page_obj.has_next(),
             },
             safe=False

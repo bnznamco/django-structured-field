@@ -2,8 +2,8 @@ import pytest
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
-def test_structured_field(setting_fixture):
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
+def test_structured_field(cache_setting_fixture):
     from tests.app.test_module.models import TestModel
     instance = TestModel.objects.create(
         title="test", structured_data={"name": "John", "age": 42}
@@ -14,8 +14,8 @@ def test_structured_field(setting_fixture):
 
 # create an instance of TestModel with structured_data as a valid TestSchema object
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
-def test_valid_test_schema_object(setting_fixture):
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
+def test_valid_test_schema_object(cache_setting_fixture):
     from tests.app.test_module.models import TestModel, TestSchema
     schema = TestSchema(name="John", age=25)
     instance = TestModel(title="test", structured_data=schema)
@@ -24,8 +24,8 @@ def test_valid_test_schema_object(setting_fixture):
 
 # Can access fields of nested structured_data in TestModel
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
-def test_nested_structured_field(setting_fixture):
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
+def test_nested_structured_field(cache_setting_fixture):
     from tests.app.test_module.models import TestModel, TestSchema
     child_data = TestSchema(name="John", age=25)
     data = TestSchema(name="Alice", age=10, child=child_data)

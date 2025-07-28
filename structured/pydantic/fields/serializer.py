@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from typing import Callable, Union, Dict, Any
-from structured.utils.serializer import minimal_serialization, minimal_list_serialization
+from structured.utils.context import build_context
+from structured.utils.serializer import build_model_serializer
 from structured.cache.engine import ValueWithCache
 from django.db import models as django_models
 from pydantic import SerializationInfo
@@ -22,11 +23,8 @@ class FieldSerializer:
         ) -> Union[Dict[str, Any], None]:
             if isinstance(instance, ValueWithCache):
                 instance = instance.retrieve()
-            if info.mode == "python":
-                return self.serializer_class(instance=instance, many=self.many, context=info.context or {}).data
-            if self.many:
-                return minimal_list_serialization(instance)
-            return minimal_serialization(instance)
+            Serializer = build_model_serializer(instance.__class__, bases=(self.serializer_class,))
+            return Serializer(instance=instance, many=self.many, context=build_context(info)).data
 
         self.serializer_function = serialize_data
 

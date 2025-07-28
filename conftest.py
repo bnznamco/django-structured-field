@@ -20,7 +20,7 @@ def django_db_setup(django_db_blocker):
         connection.close()
 
 @pytest.fixture
-def setting_fixture(request):
+def cache_setting_fixture(request):
     """Fixture to dynamically adjust settings based on parameter."""
     if request.param == "cache_enabled":
          settings.STRUCTURED_FIELD = {"CACHE": {"SHARED": False, "ENABLED": True}}
@@ -28,5 +28,13 @@ def setting_fixture(request):
         settings.STRUCTURED_FIELD = {"CACHE": {"SHARED": False, "ENABLED": False}}
     elif request.param == "shared_cache":
         settings.STRUCTURED_FIELD = {"CACHE": {"SHARED": True, "ENABLED": True}}
+    yield
+    delattr(settings, "STRUCTURED_FIELD")
+    
+@pytest.fixture
+def recursion_depth_setting_fixture(request):
+    """Fixture to dynamically adjust settings based on parameter."""
+    if request.param is not None:
+        settings.STRUCTURED_FIELD = {"SERIALIZATION": {"MAX_DEPTH": request.param}}
     yield
     delattr(settings, "STRUCTURED_FIELD")

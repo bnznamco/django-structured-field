@@ -2,8 +2,8 @@ import pytest
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
-def test_custom_serializer_field(setting_fixture):
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
+def test_custom_serializer_field(cache_setting_fixture):
     from tests.app.test_module.models import TestModel, SimpleRelationModel
     rel_models = SimpleRelationModel.objects.bulk_create(
         [SimpleRelationModel(name=name) for name in ["test1", "test2"]]

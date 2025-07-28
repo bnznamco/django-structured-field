@@ -3,8 +3,8 @@ import pytest, json
 
 # Can create a TestSchema object with a QuerySet field
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
-def test_queryset_field(setting_fixture):
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
+def test_queryset_field(cache_setting_fixture):
     from tests.app.test_module.models import SimpleRelationModel, TestModel 
     names = ["test1", "test2", "test3", "test4", "test5"]
     SimpleRelationModel.objects.bulk_create(
@@ -24,8 +24,8 @@ def test_queryset_field(setting_fixture):
 
 # Can create a TestSchema object with a QuerySet field using pk list validation
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
-def test_queryset_field_pk_list_validation(setting_fixture):
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
+def test_queryset_field_pk_list_validation(cache_setting_fixture):
     from tests.app.test_module.models import SimpleRelationModel, TestModel
     names = ["test1", "test2", "test3", "test4", "test5"]
     SimpleRelationModel.objects.bulk_create(
@@ -45,8 +45,8 @@ def test_queryset_field_pk_list_validation(setting_fixture):
 
 # Can create a TestSchema object with a QuerySet field using dict validation
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
-def test_queryset_field_dict_validation(setting_fixture):
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
+def test_queryset_field_dict_validation(cache_setting_fixture):
     from tests.app.test_module.models import SimpleRelationModel, TestModel
     names = ["test1", "test2", "test3", "test4", "test5"]
     SimpleRelationModel.objects.bulk_create(
@@ -66,8 +66,8 @@ def test_queryset_field_dict_validation(setting_fixture):
     
 # Can create a TestSchema object with a QuerySet field using model list validation
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
-def test_queryset_field_model_list_validation(setting_fixture):
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
+def test_queryset_field_model_list_validation(cache_setting_fixture):
     from tests.app.test_module.models import SimpleRelationModel, TestModel
     names = ["test1", "test2", "test3", "test4", "test5"]
     SimpleRelationModel.objects.bulk_create(
@@ -88,8 +88,8 @@ def test_queryset_field_model_list_validation(setting_fixture):
 
 # TestSchema with QuerySet field mantains the order of the given QuerySet
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
-def test_queryset_field_order(setting_fixture):
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
+def test_queryset_field_order(cache_setting_fixture):
     from tests.app.test_module.models import SimpleRelationModel, TestModel
     names = ["test1", "test2", "test3", "test4", "test5"]
     SimpleRelationModel.objects.bulk_create(
@@ -120,8 +120,8 @@ def test_queryset_field_order(setting_fixture):
 
 # Can create nested TestSchema objects with a QuerySet field
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
-def test_nested_queryset_field(setting_fixture):
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
+def test_nested_queryset_field(cache_setting_fixture):
     from tests.app.test_module.models import SimpleRelationModel, TestModel, TestSchema
     names1 = ["test1", "test2", "test3", "test4", "test5"]
     names2 = ["test6", "test7", "test8", "test9", "test10"]
@@ -150,8 +150,8 @@ def test_nested_queryset_field(setting_fixture):
 
 # Can edit a QuerySet and save the changes to the database
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
-def test_queryset_field_edit(setting_fixture):
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
+def test_queryset_field_edit(cache_setting_fixture):
     from tests.app.test_module.models import SimpleRelationModel, TestModel
     names = ["test1", "test2", "test3", "test4", "test5"]
     SimpleRelationModel.objects.bulk_create(

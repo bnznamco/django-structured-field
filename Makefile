@@ -6,4 +6,4 @@ clean:
 
 test: clean
 	@flake8 structured
-	@pytest --cov=structured -s --cov-report=xml --cov-report=term-missing
+	@pytest --cov=structured -s -vv --cov-report=xml --cov-report=term-missing

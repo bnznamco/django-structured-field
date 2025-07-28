@@ -3,8 +3,8 @@ import pytest
 
 # Test structured.utils.typing
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
-def test_utils_typing(setting_fixture):
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
+def test_utils_typing(cache_setting_fixture):
     from structured.utils.typing import find_model_type_from_args, get_type
     from tests.app.test_module.models import TestSchema, SimpleRelationModel
     from typing import Union

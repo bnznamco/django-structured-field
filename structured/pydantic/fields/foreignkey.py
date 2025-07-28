@@ -4,11 +4,9 @@ from django.db import models as django_models
 from pydantic import GetJsonSchemaHandler, SerializationInfo
 from pydantic_core import core_schema as cs
 from pydantic.json_schema import JsonSchemaValue
+from structured.utils.context import build_context
 from structured.utils.options import build_relation_schema_options
-from structured.utils.serializer import (
-    build_standard_model_serializer,
-    minimal_serialization,
-)
+from structured.utils.serializer import build_model_serializer
 from structured.utils.typing import get_type
 from django.apps import apps
 
@@ -69,15 +67,13 @@ class ForeignKey(Generic[T]):
         )
 
         def serialize_data(instance: Union[ValueWithCache, django_models.Model, None], info: SerializationInfo) -> Union[Dict[str, Any], None]:
-            if info.mode == "python":
-                serializer_class = model_class
-                if instance:
-                    serializer_class = getattr(instance, "__class__", serializer_class)
-                serializer = build_standard_model_serializer(serializer_class, depth=1)
-                return instance and serializer(instance=instance, context=info.context or {}).data
+            serializer_class = model_class
             if isinstance(instance, ValueWithCache):
                 instance = instance.retrieve()
-            return minimal_serialization(instance)
+            if instance:
+                serializer_class = getattr(instance, "__class__", serializer_class)
+            Serializer = build_model_serializer(serializer_class)
+            return instance and Serializer(instance=instance, context=build_context(info)).data
 
         return cs.json_or_python_schema(
             json_schema=cs.union_schema(

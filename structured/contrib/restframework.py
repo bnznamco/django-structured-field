@@ -2,8 +2,8 @@ from pydantic import TypeAdapter, ValidationError as PydanticValidationError
 from rest_framework import serializers
 from rest_framework.utils import model_meta
 from typing import TYPE_CHECKING, Union, List
-
 from structured.fields import StructuredJSONField as DjangoStructuredJSONField
+from structured.utils.context import increase_context_depth
 from structured.utils.dict import dict_merge
 from structured.utils.errors import map_pydantic_errors
 
@@ -66,4 +66,6 @@ class StructuredModelSerializer(FieldsOverrideMixin, serializers.ModelSerializer
     """
     This serializer allows to serialize and deserialize structured data.
     """
-    pass
+    def __init__(self, *args, **kwargs):
+        kwargs["context"] = increase_context_depth(kwargs.get("context", {}), 1)
+        super().__init__(*args, **kwargs)

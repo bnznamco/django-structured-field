@@ -15,5 +15,9 @@ class Settings:
     def STRUCTURED_FIELD_SHARED_CACHE(self):
         return pointed_getter(self.get_settings(), "CACHE.SHARED", False)
 
+    @property
+    def STRUCTURED_SERIALIZATION_MAX_DEPTH(self):
+        return pointed_getter(self.get_settings(), "SERIALIZATION.MAX_DEPTH", 2)
+
 
 settings = Settings()

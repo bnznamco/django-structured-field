@@ -4,11 +4,9 @@ from django.db import models as django_models
 from pydantic import GetJsonSchemaHandler, SerializationInfo
 from pydantic_core import core_schema as cs
 from pydantic.json_schema import JsonSchemaValue
+from structured.utils.context import build_context
 from structured.utils.options import build_relation_schema_options
-from structured.utils.serializer import (
-    build_standard_model_serializer,
-    minimal_list_serialization,
-)
+from structured.utils.serializer import build_model_serializer
 from structured.utils.typing import get_type
 
 
@@ -100,10 +98,8 @@ class QuerySet(Generic[T]):
         )
 
         def serialize_data(qs: django_models.QuerySet, info: SerializationInfo) -> List[Dict[str, Any]]:
-            if info.mode == "python":
-                serializer = build_standard_model_serializer(get_mclass(), depth=1)
-                return serializer(instance=qs, many=True, context=info.context or {}).data
-            return minimal_list_serialization(qs)
+            Serializer = build_model_serializer(get_mclass())
+            return Serializer(instance=qs, many=True, context=build_context(info)).data
 
         return cs.json_or_python_schema(
             json_schema=cs.union_schema(

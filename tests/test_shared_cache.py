@@ -2,8 +2,8 @@ import pytest
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["shared_cache"], indirect=True)
-def test_shared_cache_engine(setting_fixture, django_assert_num_queries):
+@pytest.mark.parametrize("cache_setting_fixture", ["shared_cache"], indirect=True)
+def test_shared_cache_engine(cache_setting_fixture, django_assert_num_queries):
     from tests.app.test_module.models import SimpleRelationModel, TestModel, TestSchema
     from structured.cache import get_global_cache
 
@@ -47,8 +47,8 @@ def test_shared_cache_engine(setting_fixture, django_assert_num_queries):
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["shared_cache"], indirect=True)
-def test_shared_cache_flush_method(setting_fixture):
+@pytest.mark.parametrize("cache_setting_fixture", ["shared_cache"], indirect=True)
+def test_shared_cache_flush_method(cache_setting_fixture):
     from tests.app.test_module.models import SimpleRelationModel, TestSchema
     from structured.cache import get_global_cache
 
@@ -78,8 +78,8 @@ def test_shared_cache_flush_method(setting_fixture):
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["shared_cache"], indirect=True)
-def test_cache_set_method(setting_fixture):
+@pytest.mark.parametrize("cache_setting_fixture", ["shared_cache"], indirect=True)
+def test_cache_set_method(cache_setting_fixture):
     from tests.app.test_module.models import SimpleRelationModel
     from structured.cache import get_global_cache
 
@@ -100,8 +100,8 @@ def test_cache_set_method(setting_fixture):
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["shared_cache"], indirect=True)
-def test_shared_cache_signals(setting_fixture):
+@pytest.mark.parametrize("cache_setting_fixture", ["shared_cache"], indirect=True)
+def test_shared_cache_signals(cache_setting_fixture):
     from tests.app.test_module.models import SimpleRelationModel
     from structured.cache import get_global_cache
 

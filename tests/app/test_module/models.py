@@ -78,6 +78,9 @@ class UnionSchema(BaseModel):
     data: Union[TestSchema, TestSchema2] = Field(discriminator='type')
 
 
+class RecursiveOnModelSchema(BaseModel):
+    child_model: "ForeignKey[TestModel]" = None
+
 def init_union_schema():
     return {"data": {"name": "", "type": "schema1"}}
 
@@ -87,6 +90,7 @@ class TestModel(models.Model):
     structured_data = StructuredJSONField(schema=TestSchema, default=init_schema)
     structured_data_list = StructuredJSONField(schema=TestSchema, default=list)
     structured_data_union = StructuredJSONField(schema=UnionSchema, default=init_union_schema)
-
+    structured_data_recursive = StructuredJSONField(schema=RecursiveOnModelSchema, default=dict)
+    
     def __str__(self) -> str:
         return self.title

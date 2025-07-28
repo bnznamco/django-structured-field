@@ -3,8 +3,8 @@ import pytest
 
 # Heavy nested TestSchema object with a ForeignKey field hits database only once
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
-def test_heavy_nested_foreign_key_field(setting_fixture, django_assert_num_queries):
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
+def test_heavy_nested_foreign_key_field(cache_setting_fixture, django_assert_num_queries):
     from tests.app.test_module.models import SimpleRelationModel, TestModel, TestSchema
     from structured.settings import settings
     if settings.STRUCTURED_FIELD_SHARED_CACHE:
@@ -59,8 +59,8 @@ def test_heavy_nested_foreign_key_field(setting_fixture, django_assert_num_queri
 
 # Heavy nested TestSchema object with a Queryset field hits database only once
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
-def test_heavy_nested_queryset_field(setting_fixture, django_assert_num_queries):
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
+def test_heavy_nested_queryset_field(cache_setting_fixture, django_assert_num_queries):
     from tests.app.test_module.models import SimpleRelationModel, TestModel, TestSchema
     from structured.settings import settings
     
@@ -116,8 +116,8 @@ def test_heavy_nested_queryset_field(setting_fixture, django_assert_num_queries)
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
-def test_sequence_child(setting_fixture, django_assert_num_queries):
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
+def test_sequence_child(cache_setting_fixture, django_assert_num_queries):
     from tests.app.test_module.models import SimpleRelationModel, TestModel, TestSchema
     from structured.settings import settings
     
