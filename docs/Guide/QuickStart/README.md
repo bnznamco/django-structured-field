@@ -71,7 +71,7 @@ class UserProfile(BaseModel):
     email: str
 
 class User(models.Model):
-    profile = StructuredJSONField(model=UserProfile)
+    profile = StructuredJSONField(schema=UserProfile)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
