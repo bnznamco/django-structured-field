@@ -24,7 +24,7 @@ class FieldSerializer:
             if isinstance(instance, ValueWithCache):
                 instance = instance.retrieve()
             Serializer = build_model_serializer(instance.__class__, bases=(self.serializer_class,))
-            return Serializer(instance=instance, many=self.many, context=build_context(info)).data
+            return Serializer(instance=instance, many=self.many, context=build_context(info)).data or None
 
         self.serializer_function = serialize_data
 
