@@ -2,6 +2,28 @@
 
 <!-- version list -->
 
+## v1.1.2 (2025-10-12)
+
+### Bug Fixes
+
+- **cache**: Fix model dont exist retrieving cache
+  ([`88069a1`](https://github.com/bnznamco/django-structured-field/commit/88069a1031c92cb09055aec757738ebbf2b6c511))
+
+- **cache**: Prevent getting values from malformed dicts
+  ([`2534516`](https://github.com/bnznamco/django-structured-field/commit/2534516fc3bb617dda5e6d12fd5dfb0eaaebd35f))
+
+- **serializer**: Fix custom serializer returning empty dict instead of none
+  ([`266874a`](https://github.com/bnznamco/django-structured-field/commit/266874a7ce780b0bb5f54c2d9e47b84c77c6d09d))
+
+### Chores
+
+- Update changelog updater
+  ([`d94f98c`](https://github.com/bnznamco/django-structured-field/commit/d94f98c96fb005fb6c806058f3b6f6d880ab07d6))
+
+- Update README.md ([#4](https://github.com/bnznamco/django-structured-field/pull/4),
+  [`ca3dc97`](https://github.com/bnznamco/django-structured-field/commit/ca3dc97336da9b00e16633079908f4b852424103))
+
+
 ## v1.1.0 (2025-07-27)
 
 ### Bug Fixes
