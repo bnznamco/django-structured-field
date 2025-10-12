@@ -179,6 +179,6 @@ class ValueWithCache:
         else:
             val = cache.get(self.value, None)
             if val is None:
-                return self.model._default_manager.get(pk=self.value)
+                return self.model._default_manager.filter(pk=self.value).first()
             else:
                 return val
