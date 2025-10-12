@@ -127,7 +127,7 @@ class CacheEngine:
         if isinstance(value, DjangoModel):
             info.model = value.__class__
             value = value.pk
-        if isinstance(value, dict):
+        if isinstance(value, dict) and "model" in value:
             info.model = apps.get_model(*value["model"].split("."))
             value = value.get(info.model._meta.pk.attname, None)
         if value:
