@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v1.2.0 (2026-01-07)
+
+### Features
+
+- Add support for Python 3.14+ deferred annotations handling
+  ([#5](https://github.com/bnznamco/django-structured-field/pull/5),
+  [`41688ec`](https://github.com/bnznamco/django-structured-field/commit/41688ecfc31b230fd51f4176e8972855eec34a81))
+
+- Added support for python 3.14 and Django 5.2 LTS
+  ([#5](https://github.com/bnznamco/django-structured-field/pull/5),
+  [`41688ec`](https://github.com/bnznamco/django-structured-field/commit/41688ecfc31b230fd51f4176e8972855eec34a81))
+
+
 ## v1.1.2 (2025-10-12)
 
 ### Bug Fixes
