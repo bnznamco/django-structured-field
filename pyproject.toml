@@ -7,21 +7,30 @@ authors = [{name = "Lotrèk", email = "gabriele@lotrek.it"}]
 classifiers = [
   "Environment :: Web Environment",
   "Framework :: Django",
+  "Framework :: Django :: 4.2",
+  "Framework :: Django :: 5.0",
+  "Framework :: Django :: 5.1",
+  "Framework :: Django :: 5.2",
   "Intended Audience :: Developers",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-  "djangorestframework>=3.10.0,<4.0.0",
+  "djangorestframework>=3.14.0,<4.0.0",
   "Django>=4.2",
-  "pydantic~=2.9.2",
+  "pydantic>=2.12",
 ]
 description = "Django json field empowered by pydantic"
 dynamic = ["version"]
 keywords = ["django", "pydantic", "django pydantic", "django json", "json schema", "django form"]
 license = {text = "MIT"}
 name = "django-structured-json-field"
-requires-python = ">= 3.9"
+requires-python = ">= 3.10"
 
 [project.readme]
 content-type = "text/markdown"
