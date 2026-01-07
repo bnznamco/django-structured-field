@@ -1,3 +1,4 @@
+import sys
 from typing import Any, Dict, Tuple, Optional, Type
 from pydantic._internal._typing_extra import parent_frame_namespace
 from pydantic._internal._generics import PydanticGenericMetadata
@@ -7,6 +8,24 @@ from structured.utils.pydantic import map_method_aliases, patch_annotation
 from abc import ABCMeta
 from structured.cache import CacheEngine, CacheEnabledModel
 from structured.utils.namespace import merge_cls_and_parent_ns
+
+
+def _get_raw_annotations(namespace: Dict[str, Any]) -> Dict[str, Any]:
+    """Get annotations from namespace, handling Python 3.14+ deferred annotations."""
+    if sys.version_info >= (3, 14):
+        if '__annotations__' in namespace:
+            # `from __future__ import annotations` was used in the model's module
+            return namespace['__annotations__']
+        else:
+            # See https://docs.python.org/3.14/library/annotationlib.html#using-annotations-in-a-metaclass:
+            from annotationlib import Format, call_annotate_function, get_annotate_from_class_namespace
+
+            if annotate := get_annotate_from_class_namespace(namespace):
+                return call_annotate_function(annotate, format=Format.FORWARDREF)
+            else:
+                return {}
+    else:
+        return namespace.get('__annotations__', {})
 
 
 class BaseModelMeta(ModelMetaclass):
@@ -20,7 +39,7 @@ class BaseModelMeta(ModelMetaclass):
         _create_model_module: Optional[str] = None,
         **kwargs,
     ):
-        annotations: dict = namespace.get("__annotations__", {})
+        annotations: dict = dict(_get_raw_annotations(namespace))
         for base in bases:
             for base_ in base.__mro__:
                 if base_ is PyDBaseModel:
