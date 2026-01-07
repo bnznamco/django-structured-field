@@ -12,7 +12,8 @@ def test_utils_typing(cache_setting_fixture):
     names = ["test1", "test2", "test3"]
     SimpleRelationModel.objects.bulk_create([SimpleRelationModel(name=name) for name in names])
     model_instance = TestSchema(name="test", age=20, fk_field=SimpleRelationModel.objects.first(), qs_field=SimpleRelationModel.objects.all())
-    for field_name, field in model_instance.model_fields.items():
+    # Access model_fields from the class, not the instance (deprecated in Pydantic V2.11)
+    for field_name, field in TestSchema.model_fields.items():
         annotation = field.annotation
         origin = get_origin(annotation)
         args = get_args(annotation)

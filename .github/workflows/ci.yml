@@ -10,29 +10,39 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
-      max-parallel: 4
+      fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
-        django-version: ["4.2", "5.1", "5.2"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        django-version: ["4.2", "5.0", "5.1", "5.2"]
         exclude:
-          - python-version: "3.9" # Python 3.9 is not supported by Django 5.1
+          # Django 4.2 doesn't support Python 3.13+
+          - python-version: "3.13"
+            django-version: "4.2"
+          - python-version: "3.14"
+            django-version: "4.2"
+          # Django 5.0 doesn't support Python 3.13+
+          - python-version: "3.13"
+            django-version: "5.0"
+          - python-version: "3.14"
+            django-version: "5.0"
+          # Django 5.1 doesn't support Python 3.14
+          - python-version: "3.14"
             django-version: "5.1"
-          - python-version: "3.9" # Python 3.9 is not supported by Django 5.2
-            django-version: "5.2"
             
     name: 🦠 Test on Python ${{ matrix.python-version }} with Django ${{ matrix.django-version }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: 🐍 Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+        allow-prereleases: true
     - name: 📦 Install dependencies 
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements-dev.txt
-        pip install Django==${{ matrix.django-version }}
+        pip install "Django~=${{ matrix.django-version }}.0"
     - name: 🔬 Test with pytest and calculate coverage 
       run: make test
     - name: 🩺 Upload coverage to codecov.io

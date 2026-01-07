@@ -54,7 +54,8 @@ class BaseModelMeta(ModelMetaclass):
         namespace: Dict[str, Any],
     ) -> Dict[str, Any]:
         cls = ABCMeta.__new__(mcs, cls_name, bases, namespace)
-        parent_namespace = build_lenient_weakvaluedict(parent_frame_namespace())
+        parent_ns = parent_frame_namespace()
+        parent_namespace = build_lenient_weakvaluedict(parent_ns) if parent_ns else None
         return merge_cls_and_parent_ns(cls, parent_namespace)
 
 
