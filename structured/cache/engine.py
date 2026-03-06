@@ -122,22 +122,22 @@ class CacheEngine:
         Process a foreign key field.
         """
         value = pointed_getter(data, field_name, None)
-        if info.model._meta.abstract:
-            info.model = self._resolve_abstract_model(value, info.model)
+        model = info.model
+        if model._meta.abstract:
+            model = self._resolve_abstract_model(value, model)
         if isinstance(value, DjangoModel):
-            info.model = value.__class__
+            model = value.__class__
             value = value.pk
         if isinstance(value, dict) and "model" in value:
-            info.model = apps.get_model(*value["model"].split("."))
-            value = value.get(info.model._meta.pk.attname, None)
+            model = apps.get_model(*value["model"].split("."))
+            value = value.get(model._meta.pk.attname, None)
         if value:
             if isinstance(value, ValueWithCache):
-                fk_data = {}
                 return
             attname = (
-                info.model._meta.pk.attname if not info.model._meta.abstract else ""
+                model._meta.pk.attname if not model._meta.abstract else ""
             )
-            fk_data[info.model].append(
+            fk_data[model].append(
                 (field_name, pointed_getter(value, attname, value))
             )
 
@@ -160,7 +160,6 @@ class CacheEngine:
         value = pointed_getter(data, field_name, [])
         if isinstance(value, list):
             if any(isinstance(v, ValueWithCache) for v in value):
-                fk_data = {}
                 return
             fk_data[info.model].append(
                 (

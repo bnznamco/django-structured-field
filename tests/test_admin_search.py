@@ -116,3 +116,77 @@ def test_search_model_wrong_model(cache_setting_fixture, admin_client):
     )
     assert response.status_code == 404
 
+
+# Test search on abstract model with query filter
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_search_abstract_model(cache_setting_fixture, admin_client):
+    """Searching for an abstract model should search all concrete subclasses."""
+    from tests.app.test_module.models import ChildModel1, ChildModel2
+
+    ChildModel1.objects.create(common_field="alpha", child_field="a1")
+    ChildModel2.objects.create(common_field="beta", child_field="b1")
+
+    response = admin_client.get(
+        "/structured_field/search_model/test_module.AbstractModel/?_q=alpha"
+    )
+    assert response.status_code == 200
+    body = response.json()
+    items = body.get("items", [])
+    assert len(items) == 1
+
+
+# Test search on abstract model with __all__
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_search_abstract_model_all(cache_setting_fixture, admin_client):
+    """Searching with __all__ on abstract model should return all instances."""
+    from tests.app.test_module.models import ChildModel1, ChildModel2
+
+    ChildModel1.objects.create(common_field="alpha", child_field="a1")
+    ChildModel2.objects.create(common_field="beta", child_field="b1")
+
+    response = admin_client.get(
+        "/structured_field/search_model/test_module.AbstractModel/?_q=__all__"
+    )
+    assert response.status_code == 200
+    body = response.json()
+    items = body.get("items", [])
+    assert len(items) == 2
+
+
+# Test search on abstract model with no query
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_search_abstract_model_no_query(cache_setting_fixture, admin_client):
+    """Abstract model search with no query should return all instances."""
+    from tests.app.test_module.models import ChildModel1, ChildModel2
+
+    ChildModel1.objects.create(common_field="alpha", child_field="a1")
+    ChildModel2.objects.create(common_field="beta", child_field="b1")
+
+    response = admin_client.get(
+        "/structured_field/search_model/test_module.AbstractModel/"
+    )
+    assert response.status_code == 200
+    body = response.json()
+    items = body.get("items", [])
+    assert len(items) == 2
+
+
+# Test search_view enforces staff_member_required
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_search_view_staff_required(cache_setting_fixture):
+    """search_view should enforce staff_member_required decorator."""
+    from django.test import RequestFactory
+    from django.contrib.auth.models import AnonymousUser
+    from structured.views import search_view
+
+    factory = RequestFactory()
+    request = factory.get("/structured_field/search_model/test_module.SimpleRelationModel/")
+    request.user = AnonymousUser()
+    response = search_view(request, "test_module.SimpleRelationModel")
+    # staff_member_required returns a redirect for anonymous users
+    assert response.status_code == 302
+

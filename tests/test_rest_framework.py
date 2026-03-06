@@ -294,5 +294,20 @@ class TestRestFramework:
         child_model_data = recursive_get_child_model(
             dumped_data, settings.STRUCTURED_SERIALIZATION_MAX_DEPTH
         )
+
+
+@pytest.mark.django_db
+def test_drf_structured_field_invalid_data():
+    """DRF StructuredJSONField should raise ValidationError on invalid data."""
+    from rest_framework.exceptions import ValidationError
+    from structured.contrib.restframework import StructuredJSONField
+    from tests.app.test_module.models import TestSchema
+
+    field = StructuredJSONField(schema=TestSchema)
+    field.many = False
+    field._name = "test"
+    field.parent = None
+    with pytest.raises(ValidationError):
+        field.to_internal_value({"name": 123, "age": "not_an_int"})
         
         assert "structured_data_recursive" not in child_model_data

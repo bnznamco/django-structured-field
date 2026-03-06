@@ -1,4 +1,5 @@
 import pytest
+import json
 
 
 # Django admin custom widget is rendered correctly
@@ -163,3 +164,46 @@ def test_admin_custom_widget_create_nested_fk_qs_fields(cache_setting_fixture, a
     assert "25" in str(response.content)
     assert "test1" in str(response.content)
     assert "test2" in str(response.content)
+
+
+# --- StructuredJSONFormField coverage ---
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_form_field_validate_schema_invalid(cache_setting_fixture):
+    """StructuredJSONFormField.validate_schema should raise ValidationError on invalid data."""
+    from django.forms import ValidationError
+    from structured.widget.fields import StructuredJSONFormField
+    from tests.app.test_module.models import TestSchema
+
+    form_field = StructuredJSONFormField(schema=TestSchema)
+    with pytest.raises(ValidationError):
+        form_field.validate_schema({"name": 123, "age": "invalid"})
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_form_field_validate_schema_none(cache_setting_fixture):
+    """StructuredJSONFormField.validate_schema should return None for None."""
+    from structured.widget.fields import StructuredJSONFormField
+    from tests.app.test_module.models import TestSchema
+
+    form_field = StructuredJSONFormField(schema=TestSchema)
+    result = form_field.validate_schema(None)
+    assert result is None
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_form_field_prepare_value_list(cache_setting_fixture):
+    """StructuredJSONFormField.prepare_value should handle list of models."""
+    from structured.widget.fields import StructuredJSONFormField
+    from tests.app.test_module.models import TestSchema
+
+    form_field = StructuredJSONFormField(schema=TestSchema)
+    schemas = [TestSchema(name="A", age=1), TestSchema(name="B", age=2)]
+    result = form_field.prepare_value(schemas)
+    parsed = json.loads(result)
+    assert isinstance(parsed, list)
+    assert len(parsed) == 2
+    assert parsed[0]["name"] == "A"
