@@ -2,6 +2,40 @@
 
 <!-- version list -->
 
+## v1.3.0 (2026-03-06)
+
+### Features
+
+- Add SKILL.md for django-structured-fields project documentation
+  ([#7](https://github.com/bnznamco/django-structured-field/pull/7),
+  [`60e1367`](https://github.com/bnznamco/django-structured-field/commit/60e136735cacf8f899208c9c8a41b7ed1f37f355))
+
+- Add support for Python 3.14+ deferred annotations handling
+  ([#6](https://github.com/bnznamco/django-structured-field/pull/6),
+  [`14c548d`](https://github.com/bnznamco/django-structured-field/commit/14c548dcdaf78799e74ea7a6a3bb052fc033e94d))
+
+- Added support for python 3.14 and Django 5.2 LTS
+  ([#6](https://github.com/bnznamco/django-structured-field/pull/6),
+  [`14c548d`](https://github.com/bnznamco/django-structured-field/commit/14c548dcdaf78799e74ea7a6a3bb052fc033e94d))
+
+- Improve cache handling by decoupling per-request caches from Django signals and enhancing thread
+  safety ([#7](https://github.com/bnznamco/django-structured-field/pull/7),
+  [`60e1367`](https://github.com/bnznamco/django-structured-field/commit/60e136735cacf8f899208c9c8a41b7ed1f37f355))
+
+### Testing
+
+- Add comprehensive tests for cache edge cases and thread safety
+  ([#7](https://github.com/bnznamco/django-structured-field/pull/7),
+  [`60e1367`](https://github.com/bnznamco/django-structured-field/commit/60e136735cacf8f899208c9c8a41b7ed1f37f355))
+
+- Add comprehensive tests for StructuredJSONField and caching behavior
+  ([#7](https://github.com/bnznamco/django-structured-field/pull/7),
+  [`60e1367`](https://github.com/bnznamco/django-structured-field/commit/60e136735cacf8f899208c9c8a41b7ed1f37f355))
+
+- Add test for shared cache cross-request partial hit behavior
+  ([`c25e52d`](https://github.com/bnznamco/django-structured-field/commit/c25e52db80562c5bcc0026b90c660f531777c0c3))
+
+
 ## v1.2.0 (2026-01-07)
 
 ### Features
