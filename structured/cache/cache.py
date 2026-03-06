@@ -39,7 +39,9 @@ def get_global_cache():
 class Cache(defaultdict):
     """
     The cache class that stores the cache data.
-    It also handles the signals coming from django models to update the cache data.
+    Per-request caches do NOT connect to Django signals — they are short-lived
+    and discarded after validation. Only ThreadSafeCache (shared mode) connects
+    signals for cross-request cache invalidation.
     The cache data is stored in the following format:
     {
         Model1: {
@@ -56,28 +58,6 @@ class Cache(defaultdict):
 
     def __init__(self) -> None:
         super().__init__(dict)
-        post_save.connect(self.on_instance_save)
-        pre_delete.connect(self.on_instance_delete)
-
-    def on_instance_save(
-        self, sender: Type[DjangoModel], instance: DjangoModel, **kwargs
-    ) -> None:
-        """
-        Signal handler for saving a model instance.
-        """
-        cache = get_global_cache() or self
-        if instance.__class__ in cache:
-            cache.set(instance)
-
-    def on_instance_delete(
-        self, sender: Type[DjangoModel], instance: DjangoModel, **kwargs
-    ) -> None:
-        """
-        Signal handler for deleting a model instance.
-        """
-        cache = get_global_cache() or self
-        if instance.__class__ in cache:
-            cache.flush(instance)
 
     def flush(
         self, data: Union[DjangoModel, Iterable[DjangoModel], None] = None, **kwargs
@@ -98,8 +78,8 @@ class Cache(defaultdict):
         Flush the cache for the given model.
         """
         if isinstance(model, str):
-            model = next((m.__name__ for m in self.keys() if m.__name__ == model), None)
-        if model in self:
+            model = next((m for m in self.keys() if m.__name__ == model), None)
+        if model and model in self:
             del self[model]
 
     def _flush_data(self, data: Union[DjangoModel, Iterable[DjangoModel]]) -> None:
@@ -131,11 +111,14 @@ class ThreadSafeCache(Cache):
     """
     A singleton cache object that allows sharing cache data between fields and instances.
     This encapsulates the cache data inside a thread-safe singleton object.
-    Every model instance invoking a cache operation will use the same cache object, allowing the cache data to be shared between them.
+    Every model instance invoking a cache operation will use the same cache object,
+    allowing the cache data to be shared between them.
+    All mutation methods are protected by a threading lock for thread safety.
+    Connects to Django signals for cross-request cache invalidation.
     """
 
     _instance = None
-    _lock = threading.Lock()
+    _lock = threading.RLock()
 
     def __new__(cls):
         if cls._instance is None:
@@ -144,6 +127,57 @@ class ThreadSafeCache(Cache):
                     cls._instance = super().__new__(cls)
 
         return cls._instance
+
+    def __init__(self) -> None:
+        if not hasattr(self, '_initialized'):
+            super().__init__()
+            self._initialized = True
+            post_save.connect(self._on_instance_save)
+            pre_delete.connect(self._on_instance_delete)
+
+    @staticmethod
+    def _on_instance_save(
+        sender: Type[DjangoModel], instance: DjangoModel, **kwargs
+    ) -> None:
+        """
+        Signal handler for saving a model instance.
+        """
+        cache = get_global_cache()
+        if cache and instance.__class__ in cache:
+            cache.set(instance)
+
+    @staticmethod
+    def _on_instance_delete(
+        sender: Type[DjangoModel], instance: DjangoModel, **kwargs
+    ) -> None:
+        """
+        Signal handler for deleting a model instance.
+        """
+        cache = get_global_cache()
+        if cache and instance.__class__ in cache:
+            cache.flush(instance)
+
+    def set(self, data: Union[DjangoModel, Iterable[DjangoModel]]) -> None:
+        with self._lock:
+            super().set(data)
+
+    def flush(
+        self, data: Union[DjangoModel, Iterable[DjangoModel], None] = None, **kwargs
+    ) -> None:
+        with self._lock:
+            super().flush(data, **kwargs)
+
+    def __setitem__(self, key, value):
+        with self._lock:
+            super().__setitem__(key, value)
+
+    def __delitem__(self, key):
+        with self._lock:
+            super().__delitem__(key)
+
+    def clear(self):
+        with self._lock:
+            super().clear()
 
 
 class ValueWithCache:
@@ -169,15 +203,30 @@ class ValueWithCache:
         """
         cache = self.cache.get(self.model)
         if hasattr(self.value, "__iter__") and not isinstance(self.value, str):
-            qs = self.model.objects.filter(pk__in=self.value)
-            setattr(
-                qs,
-                "_result_cache",
-                [cache[i] for i in self.value if i in cache] if cache else [],
-            )
+            pks = list(self.value)
+            if cache:
+                cached = [cache[i] for i in pks if i in cache]
+                missing_pks = [i for i in pks if i not in cache]
+                if missing_pks:
+                    fetched = list(self.model.objects.filter(pk__in=missing_pks))
+                    cached.extend(fetched)
+                    # Update cache with newly fetched instances
+                    for obj in fetched:
+                        cache[obj.pk] = obj
+                result = cached
+            else:
+                result = list(self.model.objects.filter(pk__in=pks))
+            # Preserve original PK ordering
+            pk_to_obj = {obj.pk: obj for obj in result}
+            ordered = [pk_to_obj[pk] for pk in pks if pk in pk_to_obj]
+            qs = self.model.objects.filter(pk__in=pks)
+            setattr(qs, "_result_cache", ordered)
             return qs
         else:
-            val = cache.get(self.value, None)
+            if cache:
+                val = cache.get(self.value, None)
+            else:
+                val = None
             if val is None:
                 return self.model._default_manager.filter(pk=self.value).first()
             else:
