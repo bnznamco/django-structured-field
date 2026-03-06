@@ -286,3 +286,98 @@ def test_double_validation_does_not_crash(cache_setting_fixture):
     obj.refresh_from_db()
     assert obj.structured_data.fk_field == model_list[0]
     assert obj.structured_data.qs_field.count() == 5
+
+
+# --- ValueWithCache partial QS cache hit & FK no cache ---
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_value_with_cache_qs_partial_hit(cache_setting_fixture):
+    """Test QuerySet retrieve when some PKs are cached and some are not."""
+    from tests.app.test_module.models import SimpleRelationModel
+    from structured.cache.cache import Cache, ValueWithCache
+
+    SimpleRelationModel.objects.bulk_create(
+        [SimpleRelationModel(name=f"test{i:04d}") for i in range(5)]
+    )
+    model_list = list(SimpleRelationModel.objects.all())
+
+    cache = Cache()
+    # Only cache first 2 items
+    for obj in model_list[:2]:
+        cache[SimpleRelationModel][obj.pk] = obj
+
+    all_pks = [obj.pk for obj in model_list]
+    vwc = ValueWithCache(cache, SimpleRelationModel, all_pks)
+    result = vwc.retrieve()
+
+    # Should return all 5 items from cache + DB
+    assert result.count() == 5
+    # Cache should now contain all items
+    assert len(cache[SimpleRelationModel]) == 5
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_value_with_cache_fk_no_cache(cache_setting_fixture):
+    """Test FK retrieve when there's no cache entry for the model."""
+    from tests.app.test_module.models import SimpleRelationModel
+    from structured.cache.cache import Cache, ValueWithCache
+
+    obj = SimpleRelationModel.objects.create(name="test")
+    cache = Cache()
+    # Don't populate cache for SimpleRelationModel
+
+    vwc = ValueWithCache(cache, SimpleRelationModel, obj.pk)
+    result = vwc.retrieve()
+
+    assert result is not None
+    assert result.pk == obj.pk
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_value_with_cache_qs_no_cache(cache_setting_fixture):
+    """Test QuerySet retrieve when there's no cache at all for the model."""
+    from tests.app.test_module.models import SimpleRelationModel
+    from structured.cache.cache import Cache, ValueWithCache
+
+    SimpleRelationModel.objects.bulk_create(
+        [SimpleRelationModel(name=f"test{i:04d}") for i in range(3)]
+    )
+    model_list = list(SimpleRelationModel.objects.all())
+    all_pks = [obj.pk for obj in model_list]
+
+    cache = Cache()
+    # No cache populated for SimpleRelationModel
+
+    vwc = ValueWithCache(cache, SimpleRelationModel, all_pks)
+    result = vwc.retrieve()
+
+    assert result.count() == 3
+
+
+# --- _resolve_abstract_model error paths ---
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_resolve_abstract_model_raises_on_pk_only(cache_setting_fixture):
+    """Passing an int/str PK for an abstract model should raise ValueError."""
+    from structured.cache.engine import CacheEngine
+    from tests.app.test_module.models import AbstractModel
+
+    engine = CacheEngine(related_fields={})
+    with pytest.raises(ValueError, match="Cannot retrieve abstract models"):
+        engine._resolve_abstract_model(42, AbstractModel)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_resolve_abstract_model_raises_on_string_pk(cache_setting_fixture):
+    """Passing a string PK for an abstract model should raise ValueError."""
+    from structured.cache.engine import CacheEngine
+    from tests.app.test_module.models import AbstractModel
+
+    engine = CacheEngine(related_fields={})
+    with pytest.raises(ValueError, match="Cannot retrieve abstract models"):
+        engine._resolve_abstract_model("some-pk", AbstractModel)
