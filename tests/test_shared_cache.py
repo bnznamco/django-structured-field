@@ -125,3 +125,47 @@ def test_shared_cache_signals(cache_setting_fixture):
             assert model.pk not in global_cache[SimpleRelationModel]
         else:
             assert global_cache[SimpleRelationModel][model.pk] == model
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["shared_cache"], indirect=True)
+def test_shared_cache_cross_request_partial_hit(cache_setting_fixture):
+    """Simulate two sequential requests where the shared cache carries over
+    partial data from the first request to the second one."""
+    from tests.app.test_module.models import SimpleRelationModel, TestModel, TestSchema
+    from structured.cache import get_global_cache
+
+    global_cache = get_global_cache()
+    global_cache.flush()
+
+    SimpleRelationModel.objects.bulk_create(
+        [SimpleRelationModel(name=f"test{i:04d}") for i in range(5)]
+    )
+    model_list = list(SimpleRelationModel.objects.all())
+
+    # --- First "request": create object referencing first 3 relations ---
+    data1 = TestSchema(name="Alice", age=10, fk_field=model_list[0], qs_field=model_list[:3])
+    obj1 = TestModel.objects.create(title="test1", structured_data=data1)
+    obj1.refresh_from_db()
+    assert obj1.structured_data.fk_field.pk == model_list[0].pk
+
+    # Shared cache should now hold the first 3 SimpleRelationModels
+    assert model_list[0].pk in global_cache[SimpleRelationModel]
+    assert model_list[1].pk in global_cache[SimpleRelationModel]
+    assert model_list[2].pk in global_cache[SimpleRelationModel]
+
+    # --- Second "request": create object referencing overlapping + new relations ---
+    data2 = TestSchema(name="Bob", age=20, fk_field=model_list[4], qs_field=model_list[1:5])
+    obj2 = TestModel.objects.create(title="test2", structured_data=data2)
+    obj2.refresh_from_db()
+
+    # FK to model_list[4] should resolve correctly (was NOT in cache before)
+    assert obj2.structured_data.fk_field.pk == model_list[4].pk
+    # QS should contain all 4 items (model_list[1:5]) — 2 from cache, 2 from DB
+    qs_pks = sorted([item.pk for item in obj2.structured_data.qs_field])
+    expected_pks = sorted([m.pk for m in model_list[1:5]])
+    assert qs_pks == expected_pks
+
+    # Shared cache should now contain all 5
+    for m in model_list:
+        assert m.pk in global_cache[SimpleRelationModel]
