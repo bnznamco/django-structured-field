@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.4.0 (2026-03-21)
+
+### Features
+
+- Brand new editor ! 🎸
+  ([`c03f683`](https://github.com/bnznamco/django-structured-field/commit/c03f6831a68063424f1ae05b5a8eb98e0d4f02c7))
+
+
 ## v1.3.0 (2026-03-06)
 
 ### Features
