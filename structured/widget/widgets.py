@@ -39,22 +39,17 @@ class StructuredJSONFormWidget(Widget):
         self.ui_schema = ui_schema
         self.extra_css = extra_css
         self.extra_js = extra_js
+        self.errors = {}
         super().__init__(**kwargs)
 
     @property
     def media(self):
-        css = [
-            "libs/select2/select2.style.css",
-            "libs/fontawesome/css/all.min.css",
-            "css/structured-field-form.min.css",
-        ]
+        css = []
         if self.extra_css:
             css.extend(self.extra_css)
         js = [
-            "https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js",
-            "libs/select2/select2.min.js",
-            "libs/jsoneditor/jsoneditor.js",
-            "js/structured-field-form.js",
+            "https://bnznamco.github.io/structured-widget-editor/latest/structured-widget-editor.iife.js",
+            "js/structured-field-init.js",
         ]
         if self.extra_js:
             js.extend(self.extra_js)
@@ -69,6 +64,7 @@ class StructuredJSONFormWidget(Widget):
             "name": name,
             "schema": json.dumps(self.get_editor_schema()),
             "ui_schema": json.dumps(self.ui_schema) if self.ui_schema else "{}",
+            "errors": json.dumps(self.errors),
         }
 
         return mark_safe(render_to_string(self.template_name, context))

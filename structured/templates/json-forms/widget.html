@@ -2,11 +2,19 @@
   id='{{ name }}_editor'
   class='structured-field-editor'
   data-name='{{ name }}'
-  data-formdata='{{ data|safe }}'
-  data-schema='{{ schema|safe }}'
-  data-uischema='{{ ui_schema|safe }}'
 ></div>
 
 <textarea id="id_{{ name }}" name="{{ name }}" style="display: none">
   {{ data }}
 </textarea>
+
+<script type="text/javascript" >
+
+  window.structuredFields = window.structuredFields || {};
+  window.structuredFields['{{ name }}'] = {
+    formData: {{ data|safe }},
+    schema: {{ schema|safe }},
+    uiSchema: {{ ui_schema|safe }},
+    errors: {{ errors|safe }},
+  };
+</script>

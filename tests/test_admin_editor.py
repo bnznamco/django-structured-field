@@ -11,10 +11,8 @@ def test_admin_custom_widget(cache_setting_fixture, admin_client):
     assert "structured_data_editor" in str(response.content)
     assert "id_structured_data" in str(response.content)
     resources = [
-        "libs/fontawesome/css/all.min.css",
-        "css/structured-field-form.min.css",
-        "libs/jsoneditor/jsoneditor.js",
-        "js/structured-field-form.js",
+        "https://bnznamco.github.io/structured-widget-editor/latest/structured-widget-editor.iife.js",
+        "js/structured-field-init.js",
     ]
     for resource in resources:
         assert resource in str(response.content)

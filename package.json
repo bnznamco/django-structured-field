@@ -3,24 +3,15 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "NODE_ENV=production rollup -c",
-    "dev": "rollup -c -w",
     "docs:dev": "vuepress dev docs",
     "docs:build": "vuepress build docs",
     "docs:publish": "./docs/.vuepress/publishDOCS.sh"
   },
   "devDependencies": {
-    "@rollup/plugin-terser": "^0.4.4",
     "@vuepress/bundler-vite": "^2.0.0-rc.20",
     "@vuepress/client": "^2.0.0-rc.20",
     "@vuepress/theme-default": "^2.0.0-rc.87",
-    "rollup": "^4.9.1",
-    "rollup-plugin-scss": "^4.0.0",
-    "sass": "^1.69.7",
     "vue": "^3.5.13",
     "vuepress": "2.0.0-rc.20"
-  },
-  "dependencies": {
-    "@json-editor/json-editor": "^2.15.2"
   }
 }

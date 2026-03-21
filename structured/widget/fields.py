@@ -1,6 +1,7 @@
 from typing import Any, Union
 from structured.pydantic.models import BaseModel
 from structured.widget.widgets import StructuredJSONFormWidget
+from structured.utils.errors import map_pydantic_errors, flatten_errors
 from pydantic import ValidationError as PydanticValidationError
 from django.forms import JSONField, ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -29,7 +30,7 @@ class StructuredJSONFormField(JSONField):
     def validate_schema(self, value):
         try:
             return value and self.schema.validate_python(value.copy())
-        except PydanticValidationError:
+        except PydanticValidationError as e:
             traceback.print_exc()
             logger.error(
                 "Validation error in StructuredJSONFormField",
@@ -39,6 +40,7 @@ class StructuredJSONFormField(JSONField):
                     "ui_schema": self.ui_schema,
                 },
             )
+            self.widget.errors = flatten_errors(map_pydantic_errors(e))
             raise ValidationError(self.error_messages["invalid_schema"], code="invalid_schema")
 
     def to_python(self, value: Any) -> Any:
