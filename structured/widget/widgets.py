@@ -59,12 +59,15 @@ class StructuredJSONFormWidget(Widget):
         return order_anyof_allof(self.schema.json_schema())
 
     def render(self, name, value, attrs=None, renderer=None):
+        final_attrs = self.build_attrs(self.attrs, attrs)
         context = {
             "data": value,
             "name": name,
             "schema": json.dumps(self.get_editor_schema()),
             "ui_schema": json.dumps(self.ui_schema) if self.ui_schema else "{}",
             "errors": json.dumps(self.errors),
+            "widget_id": final_attrs.get("id", "id_%s" % name),
+            "widget_class": final_attrs.get("class", ""),
         }
 
         return mark_safe(render_to_string(self.template_name, context))
