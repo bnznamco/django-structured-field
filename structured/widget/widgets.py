@@ -67,8 +67,7 @@ class StructuredJSONFormWidget(Widget):
         if self.extra_css:
             css.extend(self.extra_css)
         js = [
-            # "https://bnznamco.github.io/structured-widget-editor/latest/structured-widget-editor.iife.js",
-            "http://localhost:5173/dist/structured-widget-editor.iife.js",
+            "https://bnznamco.github.io/structured-widget-editor/latest/structured-widget-editor.iife.js",
             "js/structured-field-init.js",
         ]
         if self.extra_js:
