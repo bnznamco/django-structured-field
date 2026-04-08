@@ -4,7 +4,26 @@ from django.forms import Media
 from django.forms.widgets import Widget
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
+from django.conf import settings
+from django.utils.translation import get_language
 from structured.pydantic.models import BaseModel
+
+
+def get_field_language(field_name: str) -> str:
+    """
+    Detect the language associated with a translated field, covering the main
+    Django translation packages:
+    - django-modeltranslation / django-translated-fields
+    - django-parler
+    - django-hvad / django-nece
+    The suffix check is tried first; if nothing matches we fall back to the
+    currently active Django language.
+    """
+    languages = [code.replace("-", "_") for code, _ in getattr(settings, "LANGUAGES", [])]
+    for lang in sorted(languages, key=len, reverse=True):
+        if field_name.endswith(f"_{lang}"):
+            return lang
+    return get_language() or ""
 
 
 def sort_key(key, _schema):
@@ -48,7 +67,8 @@ class StructuredJSONFormWidget(Widget):
         if self.extra_css:
             css.extend(self.extra_css)
         js = [
-            "https://bnznamco.github.io/structured-widget-editor/latest/structured-widget-editor.iife.js",
+            # "https://bnznamco.github.io/structured-widget-editor/latest/structured-widget-editor.iife.js",
+            "http://localhost:5173/dist/structured-widget-editor.iife.js",
             "js/structured-field-init.js",
         ]
         if self.extra_js:
@@ -68,6 +88,7 @@ class StructuredJSONFormWidget(Widget):
             "errors": json.dumps(self.errors),
             "widget_id": final_attrs.get("id", "id_%s" % name),
             "widget_class": final_attrs.get("class", ""),
+            "language": get_field_language(name),
         }
 
         return mark_safe(render_to_string(self.template_name, context))

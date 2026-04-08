@@ -5,6 +5,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
 from django.db import models as django_models
 from django.db.models.query import QuerySet
+from django.utils import translation
 from structured.utils.serializer import build_model_serializer
 from structured.utils.django import import_abs_model
 
@@ -38,6 +39,9 @@ def search(request, model):
             model = import_abs_model(*model.rsplit(".", 1))
             if not model:
                 raise Http404(f'No model matches the given name "{model}".')
+        lang = request.GET.get("_lang", None)
+        if lang:
+            translation.activate(lang)
         search_term = request.GET.get("_q", None)
         if model._meta.abstract:
             results = abstract_model_search(model, search_term)
