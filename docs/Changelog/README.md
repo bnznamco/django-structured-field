@@ -1,5 +1,92 @@
 # CHANGELOG
 
+<!-- version list -->
+
+## v1.5.0 (2026-04-08)
+
+### Features
+
+- Add conditional logic helpers to facilitate the usage of if/then/else/dependancy conditions.
+  ([`52a836a`](https://github.com/bnznamco/django-structured-field/commit/52a836af4cb9e06174b0b643779c8b4210217bdb))
+
+
+## v1.4.0 (2026-03-21)
+
+### Features
+
+- Brand new editor ! 🎸
+  ([`c03f683`](https://github.com/bnznamco/django-structured-field/commit/c03f6831a68063424f1ae05b5a8eb98e0d4f02c7))
+
+
+## v1.3.0 (2026-03-06)
+
+### Features
+
+- Add SKILL.md for django-structured-fields project documentation
+  ([#7](https://github.com/bnznamco/django-structured-field/pull/7),
+  [`60e1367`](https://github.com/bnznamco/django-structured-field/commit/60e136735cacf8f899208c9c8a41b7ed1f37f355))
+
+- Add support for Python 3.14+ deferred annotations handling
+  ([#6](https://github.com/bnznamco/django-structured-field/pull/6),
+  [`14c548d`](https://github.com/bnznamco/django-structured-field/commit/14c548dcdaf78799e74ea7a6a3bb052fc033e94d))
+
+- Added support for python 3.14 and Django 5.2 LTS
+  ([#6](https://github.com/bnznamco/django-structured-field/pull/6),
+  [`14c548d`](https://github.com/bnznamco/django-structured-field/commit/14c548dcdaf78799e74ea7a6a3bb052fc033e94d))
+
+- Improve cache handling by decoupling per-request caches from Django signals and enhancing thread
+  safety ([#7](https://github.com/bnznamco/django-structured-field/pull/7),
+  [`60e1367`](https://github.com/bnznamco/django-structured-field/commit/60e136735cacf8f899208c9c8a41b7ed1f37f355))
+
+### Testing
+
+- Add comprehensive tests for cache edge cases and thread safety
+  ([#7](https://github.com/bnznamco/django-structured-field/pull/7),
+  [`60e1367`](https://github.com/bnznamco/django-structured-field/commit/60e136735cacf8f899208c9c8a41b7ed1f37f355))
+
+- Add comprehensive tests for StructuredJSONField and caching behavior
+  ([#7](https://github.com/bnznamco/django-structured-field/pull/7),
+  [`60e1367`](https://github.com/bnznamco/django-structured-field/commit/60e136735cacf8f899208c9c8a41b7ed1f37f355))
+
+- Add test for shared cache cross-request partial hit behavior
+  ([`c25e52d`](https://github.com/bnznamco/django-structured-field/commit/c25e52db80562c5bcc0026b90c660f531777c0c3))
+
+
+## v1.2.0 (2026-01-07)
+
+### Features
+
+- Add support for Python 3.14+ deferred annotations handling
+  ([#5](https://github.com/bnznamco/django-structured-field/pull/5),
+  [`41688ec`](https://github.com/bnznamco/django-structured-field/commit/41688ecfc31b230fd51f4176e8972855eec34a81))
+
+- Added support for python 3.14 and Django 5.2 LTS
+  ([#5](https://github.com/bnznamco/django-structured-field/pull/5),
+  [`41688ec`](https://github.com/bnznamco/django-structured-field/commit/41688ecfc31b230fd51f4176e8972855eec34a81))
+
+
+## v1.1.2 (2025-10-12)
+
+### Bug Fixes
+
+- **cache**: Fix model dont exist retrieving cache
+  ([`88069a1`](https://github.com/bnznamco/django-structured-field/commit/88069a1031c92cb09055aec757738ebbf2b6c511))
+
+- **cache**: Prevent getting values from malformed dicts
+  ([`2534516`](https://github.com/bnznamco/django-structured-field/commit/2534516fc3bb617dda5e6d12fd5dfb0eaaebd35f))
+
+- **serializer**: Fix custom serializer returning empty dict instead of none
+  ([`266874a`](https://github.com/bnznamco/django-structured-field/commit/266874a7ce780b0bb5f54c2d9e47b84c77c6d09d))
+
+### Chores
+
+- Update changelog updater
+  ([`d94f98c`](https://github.com/bnznamco/django-structured-field/commit/d94f98c96fb005fb6c806058f3b6f6d880ab07d6))
+
+- Update README.md ([#4](https://github.com/bnznamco/django-structured-field/pull/4),
+  [`ca3dc97`](https://github.com/bnznamco/django-structured-field/commit/ca3dc97336da9b00e16633079908f4b852424103))
+
+
 ## v1.1.0 (2025-07-27)
 
 ### Bug Fixes
