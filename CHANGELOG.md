@@ -2,6 +2,25 @@
 
 <!-- version list -->
 
+## v1.5.1 (2026-04-08)
+
+### Bug Fixes
+
+- Get models in correct language in `search_model` api.
+  ([`553b056`](https://github.com/bnznamco/django-structured-field/commit/553b056f33b8f21691a91bae897b894c36c199a0))
+
+- Render fields attrs in the witget to increase compatibility with modeltranslations
+  ([`d3ae25c`](https://github.com/bnznamco/django-structured-field/commit/d3ae25cf16ee383f1132a76bcf05df59cfa2fca5))
+
+- Update widget editor script URL to production version
+  ([`5ccb35d`](https://github.com/bnznamco/django-structured-field/commit/5ccb35d99328dcff143497ffc26e4e6fdfa07535))
+
+### Chores
+
+- Update vuepress deps and add changelog
+  ([`53ff6e7`](https://github.com/bnznamco/django-structured-field/commit/53ff6e76badde1915e452533a97dea11be7cca82))
+
+
 ## v1.5.0 (2026-04-08)
 
 ### Features
