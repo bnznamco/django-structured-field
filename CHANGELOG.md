@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.5.0 (2026-04-08)
+
+### Features
+
+- Add conditional logic helpers to facilitate the usage of if/then/else/dependancy conditions.
+  ([`52a836a`](https://github.com/bnznamco/django-structured-field/commit/52a836af4cb9e06174b0b643779c8b4210217bdb))
+
+
 ## v1.4.0 (2026-03-21)
 
 ### Features
