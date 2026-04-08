@@ -5,8 +5,9 @@ from structured.fields import StructuredJSONField
 from structured.pydantic.fields import ForeignKey, QuerySet
 from structured.pydantic.models import BaseModel
 from structured.pydantic.fields.serializer import FieldSerializer
+from structured.pydantic.conditionals import When, conditional_schema, dependent_required
 from rest_framework import serializers
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
 class CustomSimpleRelationModelSerializer(serializers.Serializer):
     def to_representation(self, instance):
@@ -91,6 +92,49 @@ class TestModel(models.Model):
     structured_data_list = StructuredJSONField(schema=TestSchema, default=list)
     structured_data_union = StructuredJSONField(schema=UnionSchema, default=init_union_schema)
     structured_data_recursive = StructuredJSONField(schema=RecursiveOnModelSchema, default=dict)
-    
+
+    def __str__(self) -> str:
+        return self.title
+
+
+# ---------------------------------------------------------------------------
+# Conditional-logic showcase
+# ---------------------------------------------------------------------------
+
+class ArticleSchema(BaseModel):
+    """Schema that demonstrates conditional / dependent field rules.
+
+    Rules:
+    * status == "archived"  → archive_reason becomes required
+    * status == "published" → published_at becomes required
+    * publisher present     → edition becomes required (dependentRequired)
+    """
+
+    status: Literal["draft", "review", "published", "archived"] = "draft"
+    archive_reason: Optional[str] = None
+    published_at: Optional[str] = None
+    publisher: Optional[str] = None
+    edition: Optional[str] = None
+
+    model_config = ConfigDict(json_schema_extra=conditional_schema(
+        When("status", equals="archived",
+             controls=["archive_reason"],
+             then={"required": ["archive_reason"]}),
+        When("status", equals="published",
+             controls=["published_at"],
+             then={"required": ["published_at"]}),
+        dependent_required(publisher=["edition"]),
+        
+    ))
+
+
+def init_article_schema():
+    return ArticleSchema()
+
+
+class ArticleModel(models.Model):
+    title = models.CharField(max_length=255)
+    structured_data = StructuredJSONField(schema=ArticleSchema, default=init_article_schema)
+
     def __str__(self) -> str:
         return self.title

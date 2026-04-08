@@ -7,6 +7,7 @@ It is divided into "How to" sections, each one covering a specific topic.
 - [🔄 Relationships](Relationships)
 - [🧰 Admin Integration](Admin%20Integration)
 - [🌍 REST Framework Integration](REST%20Framework%20Integration)
+- [🔀 Conditional Logic](Conditional%20Logic)
 - [⚡ Caching](Caching)
 - [🛠️ Settings Configuration](Settings%20Configuration)
 
