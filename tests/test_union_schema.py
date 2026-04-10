@@ -1,6 +1,6 @@
 import pytest
+from django.core.exceptions import ValidationError
 from tests.app.test_module.models import TestModel, SimpleRelationModel
-from pydantic import ValidationError
 
 
 @pytest.mark.django_db
