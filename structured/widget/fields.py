@@ -5,6 +5,7 @@ from structured.utils.errors import map_pydantic_errors, flatten_errors
 from pydantic import ValidationError as PydanticValidationError
 from django.forms import JSONField, ValidationError
 from django.utils.translation import gettext_lazy as _
+import copy
 import json
 import traceback
 import logging
@@ -51,6 +52,17 @@ class StructuredJSONFormField(JSONField):
     def prepare_value(self, value: Union[BaseModel, dict]) -> str:
         if isinstance(value, BaseModel):
             value = value.model_dump(mode="json")
-        if isinstance(value, list):
+        elif isinstance(value, list):
+            has_raw = any(not isinstance(v, BaseModel) for v in value)
             value = [v.model_dump(mode="json") if isinstance(v, BaseModel) else v for v in value]
+            if has_raw:
+                self._collect_initial_errors(value)
+        elif isinstance(value, dict):
+            self._collect_initial_errors(value)
         return json.dumps(value)
+
+    def _collect_initial_errors(self, value):
+        try:
+            self.schema.validate_python(copy.deepcopy(value))
+        except PydanticValidationError as e:
+            self.widget.errors = flatten_errors(map_pydantic_errors(e))

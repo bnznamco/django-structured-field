@@ -33,7 +33,16 @@ class StructuredDescriptior(DeferredAttribute):
     def __get__(self, instance, cls=None):
         value = super().__get__(instance, cls)
         if not self.field.check_type(value):
-            value = self.field.schema.validate_python(value)
+            try:
+                value = self.field.schema.validate_python(value)
+            except PydanticValidationError as e:
+                logger.warning(
+                    "Error validating field '%s' with value '%s': %s",
+                    self.field.name,
+                    value,
+                    map_pydantic_errors(e),
+                )
+                return value
             self.__set__(instance, value)
         return value
 
