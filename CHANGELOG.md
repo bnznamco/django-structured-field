@@ -2,6 +2,26 @@
 
 <!-- version list -->
 
+## v1.5.2 (2026-04-10)
+
+### Bug Fixes
+
+- Dont throw error on data retrivial from field descriptor and add admin errors if something goes
+  wrong on model initialization in django admin
+  ([`3c206bd`](https://github.com/bnznamco/django-structured-field/commit/3c206bdf53d429101b7e93c6ecae7248c59a2efc))
+
+- Fix foreign key and queryset handling in CacheEngine when they are optional
+  ([`cb16e36`](https://github.com/bnznamco/django-structured-field/commit/cb16e3653ed9a1e7509e523938d53211d707055a))
+
+### Chores
+
+- Update actions/checkout to version 6 in CI and CD workflows
+  ([`8ef6a39`](https://github.com/bnznamco/django-structured-field/commit/8ef6a39c38ce463f24ed6c4183c13444d03076ec))
+
+- Update GitHub Actions to use latest versions of checkout and setup-python actions
+  ([`189c498`](https://github.com/bnznamco/django-structured-field/commit/189c49842c0bc3ccf5d195033ecd0db44077186a))
+
+
 ## v1.5.1 (2026-04-08)
 
 ### Bug Fixes
