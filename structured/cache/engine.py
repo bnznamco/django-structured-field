@@ -1,7 +1,7 @@
 from __future__ import annotations
 from collections import defaultdict
 from inspect import isclass
-from typing import Any, Dict, List, Tuple, Set, Sequence, Type, TYPE_CHECKING, Union, get_origin, get_args
+from typing import Annotated, Any, Dict, List, Tuple, Set, Sequence, Type, TYPE_CHECKING, Union, get_origin, get_args
 from django.db.models import Model as DjangoModel
 from django.apps import apps
 from structured.settings import settings
@@ -80,9 +80,27 @@ class CacheEngine:
             elif isclass(annotation) and issubclass(annotation, CacheEnabledModel):
                 related[field_name] = RelInfo(annotation, RelInfo.RIField, field)
             elif origin and origin is Union:
-                subclass = find_model_type_from_args(args, model, CacheEnabledModel)
-                if subclass:
-                    related[field_name] = RelInfo(subclass, RelInfo.RIField, field)
+                # Check for Optional[ForeignKey[...]] or Optional[QuerySet[...]]
+                for arg in args:
+                    inner = arg
+                    # Unwrap Annotated[X, ...] → X
+                    if get_origin(inner) is Annotated:
+                        inner = get_args(inner)[0]
+                    inner_origin = get_origin(inner)
+                    if isclass(inner_origin) and issubclass(inner_origin, ForeignKey):
+                        related[field_name] = RelInfo(
+                            get_type(inner), RelInfo.FKField, field
+                        )
+                        break
+                    elif isclass(inner_origin) and issubclass(inner_origin, QuerySet):
+                        related[field_name] = RelInfo(
+                            get_type(inner), RelInfo.QSField, field
+                        )
+                        break
+                else:
+                    subclass = find_model_type_from_args(args, model, CacheEnabledModel)
+                    if subclass:
+                        related[field_name] = RelInfo(subclass, RelInfo.RIField, field)
 
         return related
 
