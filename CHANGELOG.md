@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.5.3 (2026-05-07)
+
+### Bug Fixes
+
+- **cache**: Hotfix build_plainset function (#9) thanks to @justinqian42
+  ([`4fddd6d`](https://github.com/bnznamco/django-structured-field/commit/4fddd6d617885a9a21fe3ad7d6d26eff5efa855e))
+
+
 ## v1.5.2 (2026-04-10)
 
 ### Bug Fixes
