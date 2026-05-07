@@ -45,9 +45,32 @@ jobs:
         pip install "Django~=${{ matrix.django-version }}.0"
     - name: 🔬 Test with pytest and calculate coverage 
       run: make test
+    - name: 📦 Upload coverage artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-python-${{ matrix.python-version }}-django-${{ matrix.django-version }}
+        path: |
+          coverage.xml
+          .coverage
+        include-hidden-files: true
+
+  upload-coverage:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+    - uses: actions/checkout@v6
+    - name: 📥 Download coverage artifacts
+      uses: actions/download-artifact@v4
+      with:
+        pattern: coverage-*
+        merge-multiple: true
     - name: 🩺 Upload coverage to codecov.io
       uses: codecov/codecov-action@v5
       with:
-        fail_ci_if_error: true 
-        token: ${{ secrets.CODECOV_TOKEN }}
-        verbose: true 
+        use_oidc: true
+        fail_ci_if_error: true
+        verbose: true
