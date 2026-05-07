@@ -233,7 +233,7 @@ class CacheEngine:
         plainset = defaultdict(set)
         for model, tuples in fk_data.items():
             for t in tuples:
-                if isinstance(t[1], Sequence):
+                if isinstance(t[1], (list, tuple, set, frozenset)):
                     plainset[model].update(t[1])
                 else:
                     plainset[model].add(t[1])
