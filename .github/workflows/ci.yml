@@ -33,18 +33,22 @@ jobs:
 
     steps:
     - uses: actions/checkout@v6
+    
     - name: 🐍 Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
         allow-prereleases: true
+        
     - name: 📦 Install dependencies 
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements-dev.txt
         pip install "Django~=${{ matrix.django-version }}.0"
+        
     - name: 🔬 Test with pytest and calculate coverage 
       run: make test
+      
     - name: 📦 Upload coverage artifact
       uses: actions/upload-artifact@v4
       with:
@@ -63,11 +67,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v6
+    
     - name: 📥 Download coverage artifacts
       uses: actions/download-artifact@v4
       with:
         pattern: coverage-*
-        merge-multiple: true
+        path: coverage-reports/
+        
     - name: 🩺 Upload coverage to codecov.io
       uses: codecov/codecov-action@v5
       with:
