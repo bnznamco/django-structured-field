@@ -138,3 +138,60 @@ class ArticleModel(models.Model):
 
     def __str__(self) -> str:
         return self.title
+
+
+# ---------------------------------------------------------------------------
+# Structured prefetch_related showcase
+# ---------------------------------------------------------------------------
+#
+# These models exercise StructuredManager: an outer model whose
+# StructuredJSONField references an Author, and Author itself has a FK to
+# Country and a M2M to Tag. The tests verify that
+# ``prefetch_related("structured_data__author__country")`` results in a
+# single inner query per relation hop, regardless of how many outer rows
+# (or how many distinct authors per row) are involved.
+
+class Country(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class Tag(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class Author(models.Model):
+    name = models.CharField(max_length=255)
+    country = models.ForeignKey(Country, null=True, blank=True, on_delete=models.SET_NULL, related_name="authors")
+    tags = models.ManyToManyField(Tag, blank=True, related_name="authors")
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class BookSchema(BaseModel):
+    title: str
+    author: Optional[ForeignKey[Author]] = None
+    co_authors: QuerySet[Author]
+
+
+def init_book_schema():
+    return BookSchema(title="")
+
+
+class BookModel(models.Model):
+    """
+    No explicit ``objects = StructuredManager()`` — relies on the
+    auto-install pathway driven by ``class_prepared``.
+    """
+
+    title = models.CharField(max_length=255)
+    structured_data = StructuredJSONField(schema=BookSchema, default=init_book_schema)
+
+    def __str__(self) -> str:
+        return self.title

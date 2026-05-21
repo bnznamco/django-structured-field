@@ -242,11 +242,27 @@ class CacheEngine:
     def _populate_cache(self, cache: Cache, plainset: Dict[Type[DjangoModel], Set[Any]]) -> None:
         """
         Populate the cache with the given plain set.
+
+        When a :class:`structured.orm.StructuredQuerySet` is driving the
+        evaluation, it pushes a thread-local seed mapping containing
+        prefetch-enriched instances. We consult that seed first so the
+        per-instance cache reuses those instances instead of issuing a
+        plain ``filter(pk__in=…)`` that would lose the prefetches.
         """
+        from structured.orm import current_seed_cache
+
+        seed = current_seed_cache()
         for model, values in plainset.items():
             models = list(cache.get(model, {}).values())
+            seeded = seed.get(model) if seed else None
+            if seeded:
+                present = {m.pk for m in models}
+                for pk, obj in seeded.items():
+                    if pk not in present:
+                        models.append(obj)
+                        present.add(pk)
             pks = [value for value in values if not isinstance(value, model)]
-            models_pks = [m.pk for m in models]
+            models_pks = {m.pk for m in models}
             pks = [pk for pk in pks if pk not in models_pks]
             if pks:
                 models += list(model.objects.filter(pk__in=pks))
