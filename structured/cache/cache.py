@@ -3,7 +3,7 @@ from typing import Type, Union, Iterable, Dict, Any, TYPE_CHECKING
 from django.db.models import Model as DjangoModel
 from django.db.models.query import QuerySet as DjangoQuerySet
 from django.db.models.signals import post_save, pre_delete
-from pydantic import model_validator
+from pydantic import ValidationInfo, model_validator
 import threading
 from structured.settings import settings
 
@@ -12,20 +12,43 @@ if TYPE_CHECKING:  # pragma: no cover
     from structured.cache.engine import CacheEngine
 
 
+CACHE_CONTEXT_KEY = "structured_parent_cache"
+
+
 class CacheEnabledModel:
     """
     A model class that enables caching.
+
+    When validated via ``schema.validate_python(value, context={...})``,
+    a ``Cache`` instance under the ``CACHE_CONTEXT_KEY`` key is reused
+    instead of creating a fresh per-call cache — letting multiple
+    ``StructuredJSONField``s on the same Django instance share one
+    fetch pool.
     """
 
     _cache_engine: 'CacheEngine'
 
     @model_validator(mode="wrap")
     @classmethod
-    def build_cache(cls, data: Dict[str, Any], handler: Any) -> Any:
+    def build_cache(
+        cls,
+        data: Dict[str, Any],
+        handler: Any,
+        info: ValidationInfo,
+    ) -> Any:
         """
         Build and fetch cache for the given data.
+
+        ``info`` is declared as a required positional argument with a
+        typed annotation so pydantic's signature inspection always
+        passes it. With ``info=None`` defaults, pydantic v2 sometimes
+        elects the shorter ``(cls, data, handler)`` overload and the
+        validator never sees the parent cache.
         """
-        data = cls._cache_engine.build_cache(data)
+        parent_cache = None
+        if info is not None and info.context:
+            parent_cache = info.context.get(CACHE_CONTEXT_KEY)
+        data = cls._cache_engine.build_cache(data, parent_cache=parent_cache)
         instance: "BaseModel" = handler(data)
         return cls._cache_engine.fetch_cache(instance)
 

@@ -213,15 +213,32 @@ class CacheEngine:
         for model, tuples in child_fk_data.items():
             fk_data[model] += [(f"{field_name}.{t[0]}", t[1]) for t in tuples]
 
-    def build_cache(self, data: Any) -> Any:
+    def build_cache(self, data: Any, parent_cache: "Cache | None" = None) -> Any:
         """
         Build the cache for the given data.
+
+        ``parent_cache`` lets the caller (typically a
+        :class:`StructuredDescriptor` validating a structured field on a
+        Django model instance) supply a pre-existing cache to populate
+        instead of allocating a new one. This is how a single Django row
+        with multiple structured fields ends up sharing a single fetch
+        pool: the descriptor creates the cache lazily on the instance
+        and passes it via pydantic context to every structured field's
+        validator.
+
+        ``SHARED=True`` mode takes precedence and always uses the global
+        singleton, preserving cross-request invalidation guarantees.
         """
         if not settings.STRUCTURED_FIELD_CACHE_ENABLED:
             return data
         fk_data = self.get_all_fk_data(data)
         plainset = self._build_plainset(fk_data)
-        cache = ThreadSafeCache() if settings.STRUCTURED_FIELD_SHARED_CACHE else Cache()
+        if settings.STRUCTURED_FIELD_SHARED_CACHE:
+            cache = ThreadSafeCache()
+        elif parent_cache is not None:
+            cache = parent_cache
+        else:
+            cache = Cache()
         self._populate_cache(cache, plainset)
         self._set_cache_values(data, fk_data, cache)
         return data

@@ -24,6 +24,33 @@ if TYPE_CHECKING:  # pragma: no cover
     from structured.pydantic.models import BaseModel
 
 
+_INSTANCE_CACHE_ATTR = "_structured_instance_cache"
+
+
+def _get_instance_cache(instance):
+    """
+    Return the per-instance ``Cache`` attached to a Django model
+    instance, creating it lazily. Used to share one fetch pool across
+    every ``StructuredJSONField`` on the same row.
+
+    The cache lives as long as the instance does (typically a request)
+    and is naturally GC'd alongside it.
+    """
+    from structured.cache.cache import Cache
+
+    cache = getattr(instance, _INSTANCE_CACHE_ATTR, None)
+    if cache is None:
+        cache = Cache()
+        try:
+            object.__setattr__(instance, _INSTANCE_CACHE_ATTR, cache)
+        except (AttributeError, TypeError):
+            # Some objects (e.g. __slots__ without this attr) refuse
+            # arbitrary attributes. Fall back to a per-call cache by
+            # returning None — the cache engine handles that path.
+            return None
+    return cache
+
+
 class StructuredDescriptior(DeferredAttribute):
     field: "StructuredJSONField"
 
@@ -31,10 +58,17 @@ class StructuredDescriptior(DeferredAttribute):
         instance.__dict__[self.field.attname] = value
 
     def __get__(self, instance, cls=None):
+        from structured.cache.cache import CACHE_CONTEXT_KEY
+
         value = super().__get__(instance, cls)
         if not self.field.check_type(value):
+            context = None
+            if instance is not None:
+                parent_cache = _get_instance_cache(instance)
+                if parent_cache is not None:
+                    context = {CACHE_CONTEXT_KEY: parent_cache}
             try:
-                value = self.field.schema.validate_python(value)
+                value = self.field.schema.validate_python(value, context=context)
             except PydanticValidationError as e:
                 logger.warning(
                     "Error validating field '%s' with value '%s': %s",
@@ -73,14 +107,26 @@ class StructuredJSONField(JSONField):
 
     @property
     def list_data_validator(self):
+        from structured.cache.cache import CACHE_CONTEXT_KEY
+
         def list_data_validator(
             value: Any, handler: ValidatorFunctionWrapHandler, info: ValidationInfo
         ) -> Any:
+            parent_cache = None
+            if info.context:
+                parent_cache = info.context.get(CACHE_CONTEXT_KEY)
             if info.mode == "json" and isinstance(value, str):
                 return self.schema.validate_python(
-                    self.orig_schema._cache_engine.build_cache(json.loads(value))
+                    self.orig_schema._cache_engine.build_cache(
+                        json.loads(value), parent_cache=parent_cache
+                    ),
+                    context=info.context,
                 )
-            return handler(self.orig_schema._cache_engine.build_cache(value))
+            return handler(
+                self.orig_schema._cache_engine.build_cache(
+                    value, parent_cache=parent_cache
+                )
+            )
 
         return list_data_validator
 

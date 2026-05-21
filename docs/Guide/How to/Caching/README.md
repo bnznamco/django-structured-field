@@ -5,13 +5,14 @@ This guide explains how to work with caching in Django Structured JSON Field.
 The field implements a caching mechanism to optimize queries during serialization and prevent multiple identical queries, especially when dealing with relationships such as `ForeignKey` and `QuerySet` fields.
 
 ## 🌟 Current Cache Features
-- ✅ Shared cache between `ForeignKey` fields and `QuerySet` fields
+- ✅ Shared cache between `ForeignKey` and `QuerySet` fields
 - ✅ Shared cache through nested schemas
 - ✅ Shared cache through nested lists of schemas
 - ✅ Cross-row bulk fetch via [🚀 Prefetching Relations](../Prefetching%20Relations/README.md)
-- ⏳ Shared cache between all `StructuredJSONFields` in the same instance
-- ⏳ Shared cache between multiple instances of the same model
-- ⏳ Cache invalidation mechanism
+- ✅ Shared cache between all `StructuredJSONField`s on the same instance
+- 🟡 Shared cache across multiple instances of the same model — available via `SHARED=True` (process-wide singleton) or via opt-in `prefetch_related(...)`; not automatic during plain iteration
+- 🟡 Cache invalidation — Django `post_save`/`pre_delete` signals + manual `Cache.flush()`/`Cache.set()` APIs work for `SHARED` mode; cross-relation cascade (invalidating a cached row whose joined relations changed) is not handled
+- ⏳ Declarative `Annotated[…, SelectRelated/PrefetchRelated]` schema markers
 
 ## 🔧 Configuration
 
