@@ -343,6 +343,7 @@ child_qs_count = model_instance.structured_data.child.qs_field.count()
    - Enable caching to optimize query performance
    - Use appropriate indexing on related fields
    - Use `select_related()` for foreign keys when fetching models
+   - For relations *inside* structured JSON, see [🚀 Prefetching Relations](../Prefetching%20Relations/README.md) — `MyModel.objects.prefetch_related("structured_data__author__country")` Just Works
 
 3. **Validation**:
    - Ensure related objects exist before assignment
@@ -352,6 +353,7 @@ child_qs_count = model_instance.structured_data.child.qs_field.count()
 ## Next Steps
 
 After understanding relationships, you might want to explore:
+- [🚀 Prefetching Relations](../Prefetching%20Relations/README.md) for `prefetch_related` across structured paths
 - [Admin Integration](../Admin%20Integration/README.md) for managing relationships in the Django admin
 - [REST Framework Integration](../REST%20Framework%20Integration/README.md) for API endpoints
 - [Caching](../Caching/README.md) for optimizing relationship queries 

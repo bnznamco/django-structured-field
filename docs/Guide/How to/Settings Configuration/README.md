@@ -15,7 +15,8 @@ STRUCTURED_FIELD = {
     'CACHE': {
         'ENABLED': True,  # Default is True
         'SHARED': False   # Default is False, experimental feature
-    }
+    },
+    'AUTO_INSTALL_MANAGER': True,  # Default is True
 }
 ```
 
@@ -33,6 +34,16 @@ STRUCTURED_FIELD = {
     }
 }
 ```
+
+### 🚀 Auto-install Manager
+
+```python
+STRUCTURED_FIELD = {
+    'AUTO_INSTALL_MANAGER': True,  # Default is True
+}
+```
+
+Controls whether models owning a `StructuredJSONField` get an auto-promoted manager that understands `prefetch_related` across JSON paths. See [🚀 Prefetching Relations](../Prefetching%20Relations/README.md) for the full story.
 
 ## 📝 Settings Explained
 
@@ -55,6 +66,21 @@ Controls whether the cache is shared between instances:
 - `True` (experimental): Cache is shared across all instances, providing maximum optimization but with potential side effects
 
 The shared cache is marked as experimental because it uses a global cache that's shared across threads, which may lead to unexpected behavior in multi-threaded environments.
+
+#### AUTO_INSTALL_MANAGER
+
+Controls whether the package automatically promotes managers on models that own a `StructuredJSONField`:
+
+- `True` (default): every model with a structured field gets a queryset class that understands `prefetch_related("structured_data__author__country")`. Existing custom managers keep all their methods — only the underlying queryset class is wrapped.
+- `False`: nothing is auto-installed. You opt in per model by attaching `StructuredManager()` explicitly:
+
+```python
+from structured.orm import StructuredManager
+
+class Book(models.Model):
+    structured_data = StructuredJSONField(schema=BookSchema)
+    objects = StructuredManager()
+```
 
 ## 🔄 Environment-Specific Configurations
 
@@ -169,5 +195,6 @@ def test_with_shared_cache():
 
 After configuring settings, you might want to explore:
 - [⚡ Caching](../Caching/README.md) for more details on how caching works
+- [🚀 Prefetching Relations](../Prefetching%20Relations/README.md) for `prefetch_related` across JSON paths
 - [🔗 Relationships](../Relationships/README.md) for working with related models
 - [🌐 REST Framework Integration](../REST%20Framework%20Integration/README.md) for API configuration

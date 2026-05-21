@@ -8,6 +8,7 @@ The field implements a caching mechanism to optimize queries during serializatio
 - ✅ Shared cache between `ForeignKey` fields and `QuerySet` fields
 - ✅ Shared cache through nested schemas
 - ✅ Shared cache through nested lists of schemas
+- ✅ Cross-row bulk fetch via [🚀 Prefetching Relations](../Prefetching%20Relations/README.md)
 - ⏳ Shared cache between all `StructuredJSONFields` in the same instance
 - ⏳ Shared cache between multiple instances of the same model
 - ⏳ Cache invalidation mechanism
@@ -134,6 +135,7 @@ The cache works effectively even with lists of schemas containing relationships.
 2. **🔍 Query Optimization**:
    - Use appropriate database indexes on related model fields
    - Still use `select_related()` when fetching initial models
+   - For relations *inside* the JSON, use [🚀 Prefetching Relations](../Prefetching%20Relations/README.md) — Django's `prefetch_related` syntax works transparently across structured paths
    - Consider query patterns in your application design
 
 3. **🧪 Testing**:
@@ -185,6 +187,7 @@ STRUCTURED_FIELD = {
 ## 🔄 Next Steps
 
 After understanding caching, you might want to explore:
+- [🚀 Prefetching Relations](../Prefetching%20Relations/README.md) for `prefetch_related` across JSON paths
 - [🌍 REST Framework Integration](../REST%20Framework%20Integration/README.md) for API optimization
 - [🔗 Relationships](../Relationships/README.md) for complex data structures
 - [🧰 Admin Integration](../Admin%20Integration/README.md) for admin interface optimization 

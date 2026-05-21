@@ -24,6 +24,7 @@ This is a Django field that allows you to declare the structure of a JSON field 
 - Define the structure of a JSON field using Pydantic models
 - Validate the JSON field against the defined structure
 - Use relationships between models inside the JSON field 🤯
+- Django-native `prefetch_related` across JSON paths — `MyModel.objects.prefetch_related("structured_data__author__country")` Just Works 🚀
 - Easily integrate with Django Rest Framework serializers
 - Admin editor for the JSON field with autocomplete search for related models 👀
 
@@ -34,6 +35,7 @@ Check out our [documentation](https://bnznamco.github.io/django-structured-field
 
 - Installation and basic usage
 - Working with relationships
+- Prefetching relations across JSON paths
 - Admin integration
 - REST Framework integration
 - Caching

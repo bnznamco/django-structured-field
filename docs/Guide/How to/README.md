@@ -5,6 +5,7 @@ It is divided into "How to" sections, each one covering a specific topic.
 
 - [📦 Installation and Basic Usage](Installation%20and%20Basic%20Usage)
 - [🔄 Relationships](Relationships)
+- [🚀 Prefetching Relations](Prefetching%20Relations)
 - [🧰 Admin Integration](Admin%20Integration)
 - [🌍 REST Framework Integration](REST%20Framework%20Integration)
 - [🔀 Conditional Logic](Conditional%20Logic)
