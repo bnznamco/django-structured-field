@@ -174,6 +174,35 @@ def test_search_abstract_model_no_query(cache_setting_fixture, admin_client):
     assert len(items) == 2
 
 
+# Test the routed endpoint rejects anonymous users
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_search_endpoint_requires_staff(cache_setting_fixture, client):
+    """The routed search URL must not be accessible anonymously."""
+    from tests.app.test_module.models import SimpleRelationModel
+
+    SimpleRelationModel.objects.create(name="secret")
+    response = client.get(
+        "/structured_field/search_model/test_module.SimpleRelationModel/"
+    )
+    # staff_member_required redirects anonymous users to the admin login
+    assert response.status_code == 302
+    assert "/admin/login/" in response["Location"]
+
+
+# Test the routed endpoint rejects authenticated non-staff users
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_search_endpoint_rejects_non_staff(cache_setting_fixture, client, django_user_model):
+    """Authenticated but non-staff users must not reach the search endpoint."""
+    user = django_user_model.objects.create_user(username="plain", password="pw")
+    client.force_login(user)
+    response = client.get(
+        "/structured_field/search_model/test_module.SimpleRelationModel/"
+    )
+    assert response.status_code == 302
+
+
 # Test search_view enforces staff_member_required
 @pytest.mark.django_db
 @pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
