@@ -70,8 +70,15 @@ class StructuredDescriptior(DeferredAttribute):
             if instance is not None:
                 # Snapshot the raw data BEFORE validation: the cache engine
                 # mutates the input in place (ValueWithCache splicing), and
-                # successful validation replaces it entirely.
-                raw_copy = copy.deepcopy(value)
+                # successful validation replaces it entirely. Values that are
+                # not pristine JSON (e.g. already polluted by a previous
+                # cache pass, or containing model instances) may not be
+                # deep-copyable — skip the snapshot rather than fail; any
+                # earlier pristine snapshot is preserved.
+                try:
+                    raw_copy = copy.deepcopy(value)
+                except Exception:
+                    raw_copy = None
                 parent_cache = _get_instance_cache(instance)
                 if parent_cache is not None:
                     context = {CACHE_CONTEXT_KEY: parent_cache}
@@ -84,11 +91,12 @@ class StructuredDescriptior(DeferredAttribute):
                     value,
                     map_pydantic_errors(e),
                 )
-                if instance is not None:
+                if raw_copy is not None and self.field.raw_attname not in instance.__dict__:
                     instance.__dict__[self.field.raw_attname] = raw_copy
                 return value
             self.__set__(instance, value)
-            instance.__dict__[self.field.raw_attname] = raw_copy
+            if raw_copy is not None:
+                instance.__dict__[self.field.raw_attname] = raw_copy
         return value
 
 
