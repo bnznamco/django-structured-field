@@ -86,14 +86,15 @@ class Cache(defaultdict):
         self, data: Union[DjangoModel, Iterable[DjangoModel], None] = None, **kwargs
     ) -> None:
         """
-        Flush the cache for the given data or model.
+        Flush the cache for the given data and/or model; with no arguments,
+        clear the whole cache. An empty iterable flushes nothing.
         """
         model = kwargs.get("model", None)
-        if model:
+        if model is not None:
             self._flush_model(model)
-        if data:
+        if data is not None:
             self._flush_data(data)
-        else:
+        if model is None and data is None:
             self.clear()
 
     def _flush_model(self, model: Union[str, Type[DjangoModel]]) -> None:

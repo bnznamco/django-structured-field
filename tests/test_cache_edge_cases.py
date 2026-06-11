@@ -77,6 +77,48 @@ def test_flush_model_by_string_name_basic_cache(cache_setting_fixture):
     assert not cache.get(SimpleRelationModel)
 
 
+# Regression: flush(model=X) must not wipe other models from the cache
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_flush_model_keeps_other_models(cache_setting_fixture):
+    """Flushing one model must leave entries of other models untouched."""
+    from tests.app.test_module.models import SimpleRelationModel, ChildModel1
+    from structured.cache.cache import Cache
+
+    rel = SimpleRelationModel.objects.create(name="rel")
+    child = ChildModel1.objects.create(common_field="c", child_field="x")
+
+    cache = Cache()
+    cache.set([rel])
+    cache.set([child])
+
+    cache.flush(model=SimpleRelationModel)
+
+    assert not cache.get(SimpleRelationModel)
+    assert cache[ChildModel1] == {child.pk: child}
+
+
+# Regression: flush(data=[]) must be a no-op, not a full clear
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_flush_empty_iterable_is_noop(cache_setting_fixture):
+    """Flushing an empty iterable should not clear the whole cache."""
+    from tests.app.test_module.models import SimpleRelationModel
+    from structured.cache.cache import Cache
+
+    rel = SimpleRelationModel.objects.create(name="rel")
+    cache = Cache()
+    cache.set([rel])
+
+    cache.flush(data=[])
+
+    assert cache[SimpleRelationModel] == {rel.pk: rel}
+
+    # no-argument flush still clears everything
+    cache.flush()
+    assert not cache.get(SimpleRelationModel)
+
+
 # --- Edge Case #9: RelInfo.model mutation ---
 
 @pytest.mark.django_db
