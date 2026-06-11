@@ -95,8 +95,15 @@ class StructuredDescriptior(DeferredAttribute):
                     value,
                     map_pydantic_errors(e),
                 )
-                if raw_copy is not None and self.field.raw_attname not in instance.__dict__:
-                    instance.__dict__[self.field.raw_attname] = raw_copy
+                if raw_copy is not None:
+                    # The cache engine has mutated `value` in place by now
+                    # (ValueWithCache placeholders). Hand back — and keep on
+                    # the instance — the PRISTINE pre-validation data so
+                    # callers never see non-JSON-serializable internals.
+                    instance.__dict__[self.field.attname] = raw_copy
+                    if self.field.raw_attname not in instance.__dict__:
+                        instance.__dict__[self.field.raw_attname] = raw_copy
+                    return raw_copy
                 return value
             self.__set__(instance, value)
             if raw_copy is not None:

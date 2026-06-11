@@ -113,6 +113,31 @@ def test_structured_field_none_handling(cache_setting_fixture, caplog):
     assert not [r for r in caplog.records if "Error validating" in r.getMessage()]
 
 
+# On validation failure the descriptor must return PRISTINE raw data,
+# not the dict mutated in place by the cache engine
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_descriptor_returns_unpolluted_raw_on_validation_failure(cache_setting_fixture):
+    from structured.cache.cache import ValueWithCache
+    from tests.app.test_module.models import TestModel, SimpleRelationModel
+
+    rel = SimpleRelationModel.objects.create(name="rel")
+    obj = TestModel(title="t")
+    # invalid data (age must be int) that ALSO contains a relation pk,
+    # so the cache engine splices a ValueWithCache before validation fails
+    obj.__dict__["structured_data"] = {
+        "name": "x",
+        "age": "not-an-int",
+        "fk_field": rel.pk,
+    }
+    value = obj.structured_data
+    assert isinstance(value, dict)
+    assert value["fk_field"] == rel.pk
+    assert not isinstance(value.get("fk_field"), ValueWithCache)
+    # repeated access stays consistent
+    assert obj.structured_data["fk_field"] == rel.pk
+
+
 # Regression: <field>_raw must be per-instance, not field-level shared state
 @pytest.mark.django_db
 @pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
