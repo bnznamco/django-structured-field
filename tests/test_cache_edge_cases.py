@@ -77,6 +77,43 @@ def test_flush_model_by_string_name_basic_cache(cache_setting_fixture):
     assert not cache.get(SimpleRelationModel)
 
 
+# Regression: cache layer must work for models without an `objects` manager
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "cache_setting_fixture",
+    ["cache_enabled", "cache_disabled", "shared_cache"],
+    indirect=True,
+)
+def test_relations_to_custom_manager_model(cache_setting_fixture):
+    """FK/QuerySet relations targeting a model whose only manager is
+    custom-named must resolve (the cache layer used model.objects)."""
+    from typing import Optional
+    from structured.pydantic.models import BaseModel
+    from structured.pydantic.fields import QuerySet
+    from tests.app.test_module.models import CustomManagerModel
+
+    class CustomManagerSchema(BaseModel):
+        fk_field: Optional[CustomManagerModel] = None
+        qs_field: QuerySet[CustomManagerModel]
+
+    a = CustomManagerModel.items.create(name="a")
+    b = CustomManagerModel.items.create(name="b")
+
+    inst = CustomManagerSchema.validate_python(
+        {"fk_field": a.pk, "qs_field": [a.pk, b.pk]}
+    )
+    assert inst.fk_field == a
+    assert [m.pk for m in inst.qs_field] == [a.pk, b.pk]
+
+    # exercise ValueWithCache.retrieve directly on both branches
+    from structured.cache.cache import Cache, ValueWithCache
+
+    cache = Cache()
+    assert ValueWithCache(cache, CustomManagerModel, a.pk).retrieve() == a
+    qs = ValueWithCache(cache, CustomManagerModel, [b.pk, a.pk]).retrieve()
+    assert [m.pk for m in qs] == [b.pk, a.pk]
+
+
 # Regression: flush(model=X) must not wipe other models from the cache
 @pytest.mark.django_db
 @pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)

@@ -47,6 +47,17 @@ class SimpleRelationModel(models.Model):
         return self.name
 
 
+class CustomManagerModel(models.Model):
+    """Relation target whose ONLY manager is custom-named: Django does not
+    auto-create `objects`, so cache-layer code must use _default_manager."""
+
+    name = models.CharField(max_length=255)
+    items = models.Manager()
+
+    def __str__(self) -> str:
+        return self.name
+
+
 class TestSchema(BaseModel):
     type: Literal["schema1"] = "schema1"
     name: str

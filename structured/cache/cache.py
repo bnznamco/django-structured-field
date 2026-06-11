@@ -232,18 +232,18 @@ class ValueWithCache:
                 cached = [cache[i] for i in pks if i in cache]
                 missing_pks = [i for i in pks if i not in cache]
                 if missing_pks:
-                    fetched = list(self.model.objects.filter(pk__in=missing_pks))
+                    fetched = list(self.model._default_manager.filter(pk__in=missing_pks))
                     cached.extend(fetched)
                     # Update cache with newly fetched instances
                     for obj in fetched:
                         cache[obj.pk] = obj
                 result = cached
             else:
-                result = list(self.model.objects.filter(pk__in=pks))
+                result = list(self.model._default_manager.filter(pk__in=pks))
             # Preserve original PK ordering
             pk_to_obj = {obj.pk: obj for obj in result}
             ordered = [pk_to_obj[pk] for pk in pks if pk in pk_to_obj]
-            qs = self.model.objects.filter(pk__in=pks)
+            qs = self.model._default_manager.filter(pk__in=pks)
             setattr(qs, "_result_cache", ordered)
             return qs
         else:

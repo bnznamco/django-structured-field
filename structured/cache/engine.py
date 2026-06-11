@@ -282,7 +282,7 @@ class CacheEngine:
             models_pks = {m.pk for m in models}
             pks = [pk for pk in pks if pk not in models_pks]
             if pks:
-                models += list(model.objects.filter(pk__in=pks))
+                models += list(model._default_manager.filter(pk__in=pks))
             cache[model].update({obj.pk: obj for obj in models})
 
     def _set_cache_values(self, data: Any, fk_data: Dict[Type[DjangoModel], List[Tuple[str, Any]]], cache: Cache) -> None:
