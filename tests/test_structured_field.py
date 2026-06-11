@@ -94,6 +94,25 @@ def test_structured_field_raw_data_property(cache_setting_fixture):
     assert raw is not None
 
 
+# None handling: get_prep_value and the descriptor must pass NULL through
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_structured_field_none_handling(cache_setting_fixture, caplog):
+    import logging
+    from tests.app.test_module.models import TestModel
+
+    field = TestModel._meta.get_field("structured_data")
+    assert field.get_prep_value(None) is None
+    assert field.get_db_prep_value(None, connection=None) is None
+
+    obj = TestModel(title="t")
+    obj.__dict__["structured_data"] = None  # simulate a NULL column value
+    with caplog.at_level(logging.WARNING, logger="structured.fields"):
+        assert obj.structured_data is None
+        assert obj.structured_data is None  # repeated access stays silent
+    assert not [r for r in caplog.records if "Error validating" in r.getMessage()]
+
+
 # Regression: <field>_raw must be per-instance, not field-level shared state
 @pytest.mark.django_db
 @pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)

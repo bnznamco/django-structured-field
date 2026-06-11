@@ -64,6 +64,10 @@ class StructuredDescriptior(DeferredAttribute):
         from structured.cache.cache import CACHE_CONTEXT_KEY
 
         value = super().__get__(instance, cls)
+        if value is None:
+            # SQL NULL (null=True columns): validating None against the
+            # schema is pointless and used to log a warning on EVERY access.
+            return None
         if not self.field.check_type(value):
             context = None
             raw_copy = None
@@ -179,8 +183,12 @@ class StructuredJSONField(JSONField):
         return isinstance(value, self.orig_schema)
 
     def get_prep_value(
-        self, value: Union[List[Type["BaseModel"]], Type["BaseModel"]]
-    ) -> str:
+        self, value: Union[List[Type["BaseModel"]], Type["BaseModel"], None]
+    ) -> Union[str, None]:
+        # Mirror django's JSONField behavior for NULL columns: passing None
+        # through instead of crashing on None.model_dump_json.
+        if value is None:
+            return value
         value = cast_to_model(value, self.orig_schema)
         if isinstance(value, list) and self.many:
             return self.schema.dump_json(value, exclude_unset=True).decode()
