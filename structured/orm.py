@@ -60,11 +60,10 @@ from __future__ import annotations
 
 import threading
 from collections import defaultdict
-from dataclasses import dataclass, field as dataclass_field
+from dataclasses import dataclass
 from typing import (
     Any,
     Dict,
-    Iterable,
     List,
     Mapping,
     Optional,
