@@ -93,3 +93,54 @@ def test_structured_field_raw_data_property(cache_setting_fixture):
     raw = obj.structured_data_raw
     assert raw is not None
 
+
+# Regression: <field>_raw must be per-instance, not field-level shared state
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled", "cache_disabled"], indirect=True)
+def test_structured_field_raw_data_is_per_instance(cache_setting_fixture):
+    """Every instance must see ITS OWN raw data, not the last loaded row's."""
+    from tests.app.test_module.models import TestModel
+
+    TestModel.objects.create(title="a", structured_data={"name": "alpha", "age": 1})
+    TestModel.objects.create(title="b", structured_data={"name": "beta", "age": 2})
+
+    first, second = list(TestModel.objects.order_by("pk"))
+    assert first.structured_data_raw["name"] == "alpha"
+    assert second.structured_data_raw["name"] == "beta"
+    assert first.structured_data_raw is not second.structured_data_raw
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_structured_field_raw_data_survives_validation_unpolluted(cache_setting_fixture):
+    """Raw data read AFTER field access must be the pre-validation JSON,
+    without ValueWithCache placeholders spliced in by the cache engine."""
+    from structured.cache.cache import ValueWithCache
+    from tests.app.test_module.models import TestModel, SimpleRelationModel
+
+    rel = SimpleRelationModel.objects.create(name="rel")
+    TestModel.objects.create(
+        title="t",
+        structured_data={"name": "x", "age": 1, "fk_field": rel.pk},
+    )
+    obj = TestModel.objects.get(title="t")
+    _ = obj.structured_data  # triggers validation (mutates the raw dict in place)
+    raw = obj.structured_data_raw
+    assert not isinstance(raw.get("fk_field"), ValueWithCache)
+    # the persisted wire format for an FK is the minimal {id, name, model} dict
+    assert raw["fk_field"]["id"] == rel.pk
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_structured_field_raw_data_invalidated_on_assignment(cache_setting_fixture):
+    """Assigning new raw data must refresh what <field>_raw returns."""
+    from tests.app.test_module.models import TestModel
+
+    obj = TestModel.objects.create(title="t", structured_data={"name": "old", "age": 1})
+    obj = TestModel.objects.get(pk=obj.pk)
+    _ = obj.structured_data  # validate + stash
+    assert obj.structured_data_raw["name"] == "old"
+    obj.structured_data = {"name": "new", "age": 2}
+    assert obj.structured_data_raw["name"] == "new"
+

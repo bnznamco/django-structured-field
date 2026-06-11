@@ -1,3 +1,4 @@
+import copy
 import json
 from typing import Any, Union, TYPE_CHECKING, Type, List
 
@@ -56,6 +57,8 @@ class StructuredDescriptior(DeferredAttribute):
 
     def __set__(self, instance, value):
         instance.__dict__[self.field.attname] = value
+        # A new assignment invalidates any stashed pre-validation snapshot.
+        instance.__dict__.pop(self.field.raw_attname, None)
 
     def __get__(self, instance, cls=None):
         from structured.cache.cache import CACHE_CONTEXT_KEY
@@ -63,7 +66,12 @@ class StructuredDescriptior(DeferredAttribute):
         value = super().__get__(instance, cls)
         if not self.field.check_type(value):
             context = None
+            raw_copy = None
             if instance is not None:
+                # Snapshot the raw data BEFORE validation: the cache engine
+                # mutates the input in place (ValueWithCache splicing), and
+                # successful validation replaces it entirely.
+                raw_copy = copy.deepcopy(value)
                 parent_cache = _get_instance_cache(instance)
                 if parent_cache is not None:
                     context = {CACHE_CONTEXT_KEY: parent_cache}
@@ -76,8 +84,11 @@ class StructuredDescriptior(DeferredAttribute):
                     value,
                     map_pydantic_errors(e),
                 )
+                if instance is not None:
+                    instance.__dict__[self.field.raw_attname] = raw_copy
                 return value
             self.__set__(instance, value)
+            instance.__dict__[self.field.raw_attname] = raw_copy
         return value
 
 
@@ -86,7 +97,11 @@ class StructuredJSONField(JSONField):
     # TODO: write queries for prefetch related for models inside the field
 
     descriptor_class = StructuredDescriptior
-    __raw_data = None
+
+    @property
+    def raw_attname(self) -> str:
+        """Instance __dict__ key holding the pre-validation raw snapshot."""
+        return "_%s_raw" % self.attname
 
     def validate(self, value, model_instance):
         try:
@@ -176,7 +191,6 @@ class StructuredJSONField(JSONField):
         data = super().from_db_value(value, expression, connection)
         if isinstance(data, str):
             data = json.loads(data)
-        self.__raw_data = data
         return data
 
     def deconstruct(self):
@@ -203,11 +217,25 @@ class StructuredJSONField(JSONField):
             )
 
     def __get_raw_data(self, instance):
-        return self.__raw_data
+        """
+        Return THIS instance's raw (pre-validation) JSON without triggering
+        validation or relation queries. Precedence: the snapshot stashed by
+        the descriptor before validation; else the not-yet-validated value
+        sitting in ``instance.__dict__``; else a python-mode dump of an
+        already-validated value (e.g. assigned directly as a schema instance).
+        Deferred fields (``.only()``/``.defer()``) yield None.
+        """
+        if self.raw_attname in instance.__dict__:
+            return instance.__dict__[self.raw_attname]
+        value = instance.__dict__.get(self.attname)
+        if value is None or not self.check_type(value):
+            return value
+        return cast_to_python(value)
 
     def __set_raw_data(self, instance, value):
-        self.__raw_data = value
-        instance.__dict__[self.attname] = value
+        # Route through the descriptor so the stale snapshot is invalidated.
+        setattr(instance, self.attname, value)
 
     def __del_raw_data(self, instance):
         del instance.__dict__[self.attname]
+        instance.__dict__.pop(self.raw_attname, None)
