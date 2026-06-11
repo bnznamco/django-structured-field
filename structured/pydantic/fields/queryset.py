@@ -46,26 +46,30 @@ class QuerySet(Generic[T]):
                 cs.no_info_plain_validator_function(validate_from_pk_list),
             ]
         )
-        pk_attname = get_mclass()._meta.pk.attname
 
         def validate_from_dict(
             values: List[Dict[str, Union[str, int]]]
         ) -> django_models.QuerySet:
-            pk_attname = get_mclass()._meta.pk.attname
-            return validate_from_pk_list([data[pk_attname] for data in values])
+            from structured.utils.django import extract_pk
 
-        optional_field = cs.typed_dict_field(cs.str_schema(), required=False)
+            model_class = get_mclass()
+            pks = []
+            for data in values:
+                pk = extract_pk(data, model_class)
+                if pk is None:
+                    raise ValueError(
+                        f"Cannot resolve {model_class.__name__} reference from "
+                        f"{data!r}: missing '{model_class._meta.pk.attname}'/'id' key."
+                    )
+                pks.append(pk)
+            return validate_from_pk_list(pks)
+
+        # Accept any list of dicts and extract pks leniently: the persisted
+        # wire format keys items by the literal 'id', which may differ from
+        # the model's pk attname (custom primary keys).
         from_dict_list_schema = cs.chain_schema(
             [
-                cs.list_schema(
-                    cs.typed_dict_schema(
-                        {
-                            pk_attname: cs.typed_dict_field(int_str_union),
-                            "model": optional_field,
-                            "name": optional_field,
-                        }
-                    )
-                ),
+                cs.list_schema(cs.dict_schema(cs.str_schema(), cs.any_schema())),
                 cs.no_info_plain_validator_function(validate_from_dict),
             ]
         )

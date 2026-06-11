@@ -58,6 +58,18 @@ class CustomManagerModel(models.Model):
         return self.name
 
 
+class CustomPKModel(models.Model):
+    """Relation target with a custom-NAMED primary key: the persisted wire
+    format keys relations by the literal 'id', so readers must accept both
+    'code' (the attname) and 'id'."""
+
+    code = models.CharField(max_length=50, primary_key=True)
+    name = models.CharField(max_length=255)
+
+    def __str__(self) -> str:
+        return self.name
+
+
 class TestSchema(BaseModel):
     type: Literal["schema1"] = "schema1"
     name: str

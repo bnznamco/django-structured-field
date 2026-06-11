@@ -6,6 +6,7 @@ from django.db.models import Model as DjangoModel
 from django.apps import apps
 from structured.settings import settings
 from structured.utils.typing import get_type, find_model_type_from_args
+from structured.utils.django import extract_pk
 from structured.utils.getter import pointed_getter
 from structured.utils.setter import pointed_setter
 from structured.pydantic.fields import ForeignKey, QuerySet
@@ -146,18 +147,15 @@ class CacheEngine:
         if isinstance(value, DjangoModel):
             model = value.__class__
             value = value.pk
-        if isinstance(value, dict) and "model" in value:
-            model = apps.get_model(*value["model"].split("."))
-            value = value.get(model._meta.pk.attname, None)
+        if isinstance(value, dict):
+            if "model" in value:
+                model = apps.get_model(*value["model"].split("."))
+            # wire-format dicts key the pk as 'id' regardless of attname
+            value = extract_pk(value, model)
         if value:
             if isinstance(value, ValueWithCache):
                 return
-            attname = (
-                model._meta.pk.attname if not model._meta.abstract else ""
-            )
-            fk_data[model].append(
-                (field_name, pointed_getter(value, attname, value))
-            )
+            fk_data[model].append((field_name, value))
 
     def _resolve_abstract_model(self, value: Any, model: Type[DjangoModel]) -> Type[DjangoModel]:
         """
@@ -179,16 +177,17 @@ class CacheEngine:
         if isinstance(value, list):
             if any(isinstance(v, ValueWithCache) for v in value):
                 return
-            fk_data[info.model].append(
-                (
-                    field_name,
-                    [
-                        pointed_getter(i, info.model._meta.pk.attname, i)
-                        for i in value
-                        if i
-                    ],
-                )
-            )
+            pks = []
+            for i in value:
+                if not i:
+                    continue
+                pk = extract_pk(i, info.model)
+                if isinstance(i, dict) and pk is None:
+                    # malformed item: skip harvesting entirely and let the
+                    # field validators raise a proper validation error
+                    return
+                pks.append(pk)
+            fk_data[info.model].append((field_name, pks))
 
     def _process_rl_field(self, data: Any, field_name: str, info: RelInfo, fk_data: Dict[Type[DjangoModel], List[Tuple[str, Any]]]) -> None:
         """

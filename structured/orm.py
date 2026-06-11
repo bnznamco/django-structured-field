@@ -333,7 +333,8 @@ def _extract_terminal(node: Any, pk_attname: str) -> List[Any]:
     if node is None:
         return []
     if isinstance(node, dict):
-        pk = node.get(pk_attname)
+        # wire-format dicts key the pk as 'id' regardless of the attname
+        pk = node.get(pk_attname, node.get("id"))
         return [pk] if pk is not None else []
     return [node]
 

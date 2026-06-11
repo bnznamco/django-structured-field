@@ -44,13 +44,22 @@ class ForeignKey(Generic[T]):
         def validate_from_dict(
             data: Dict[str, Union[str, int]]
         ) -> Type[django_models.Model]:
+            from structured.utils.django import extract_pk
+
             if data is None:
                 return None
             model_class = get_type(source)
             if is_abstract:
                 model_class = apps.get_model(*data["model"].split("."))
-            pk_attname = model_class._meta.pk.attname
-            return validate_from_pk(data[pk_attname], model_class)
+            pk = extract_pk(data, model_class)
+            if pk is None:
+                # raise ValueError (not KeyError) so pydantic reports a
+                # proper validation error instead of letting it escape
+                raise ValueError(
+                    f"Cannot resolve {model_class.__name__} reference from "
+                    f"{data!r}: missing '{model_class._meta.pk.attname}'/'id' key."
+                )
+            return validate_from_pk(pk, model_class)
 
         from_dict_schema = cs.chain_schema(
             [
