@@ -8,6 +8,11 @@ on:
         required: false
         default: "false"
         type: boolean
+      force_publish:
+        description: "Re-publish the CURRENT version to PyPI even if no new release was created (recovers a failed publish after semantic-release already pushed the bump commit and tag)"
+        required: false
+        default: false
+        type: boolean
       verbosity:
         description: "Set verbosity level for semantic release"
         required: false
@@ -43,18 +48,30 @@ jobs:
           verbosity: ${{ github.event.inputs.verbosity || 1 }}
 
       - name: 🚧 Setup build environment
+        # Build/publish only when semantic-release actually cut a release:
+        # prevents duplicate-upload failures on no-op dispatches and makes
+        # the noop input a real dry-run (it previously still published).
+        if: steps.release.outputs.released == 'true' || (inputs.force_publish == true && inputs.noop != true)
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
           cache: "pip"
   
       - name: 🧩 Install build dependencies
+        if: steps.release.outputs.released == 'true' || (inputs.force_publish == true && inputs.noop != true)
         run: |
           python -m pip install --upgrade pip
           pip install build
   
       - name: 📦 Build package distributions
+        if: steps.release.outputs.released == 'true' || (inputs.force_publish == true && inputs.noop != true)
         run: python -m build
 
       - name: 📤 Publish package distributions to PyPI
+        if: steps.release.outputs.released == 'true' || (inputs.force_publish == true && inputs.noop != true)
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          # In recovery mode a previous run may have uploaded some files
+          # before failing — let the remaining ones through. Normal runs
+          # keep strict duplicate detection.
+          skip-existing: ${{ inputs.force_publish == true }}
