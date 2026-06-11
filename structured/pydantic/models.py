@@ -39,12 +39,22 @@ class BaseModelMeta(ModelMetaclass):
         _create_model_module: Optional[str] = None,
         **kwargs,
     ):
-        annotations: dict = dict(_get_raw_annotations(namespace))
-        for base in bases:
-            for base_ in base.__mro__:
-                if base_ is PyDBaseModel:
-                    break
+        # Collect annotations from NON-pydantic bases only (plain mixins):
+        # pydantic models inherit fields from pydantic ancestors natively
+        # (with defaults, already patched by their own metaclass pass), so
+        # re-declaring those here would let ancestors override subclass
+        # fields and reset inherited defaults to required. Plain mixins are
+        # invisible to pydantic, so their annotations must be merged in —
+        # their defaults survive as ordinary class attributes. Farthest
+        # bases first, the class's own annotations last, so the most
+        # derived declaration wins.
+        annotations: dict = {}
+        for base in reversed(bases):
+            for base_ in reversed(base.__mro__):
+                if isinstance(base_, type) and issubclass(base_, PyDBaseModel):
+                    continue
                 annotations.update(getattr(base_, "__annotations__", {}))
+        annotations.update(_get_raw_annotations(namespace))
         cls_namespace = BaseModelMeta.__get_class_types_namespace__(
             mcs, cls_name, bases, namespace
         )
