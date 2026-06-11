@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from django.apps import apps
 import os
 from structured.fields import StructuredJSONField
-from structured.migrations.structured_json_migration import (
+from structured.schema_migrations.structured_json_migration import (
     StructuredJSONMigrationGenerator,
 )
 

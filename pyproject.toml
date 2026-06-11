@@ -42,11 +42,9 @@ Homepage = "https://github.com/lotrekagency/django-structured-json-field"
 [tool.setuptools]
 include-package-data = true
 
-[tool.setuptools.packages]
-find = {namespaces = false}
-
-[tool.distutils.bdist_wheel]
-universal = true
+[tool.setuptools.packages.find]
+include = ["structured*"]
+namespaces = false
 
 [tool.semantic_release]
 version_variables = ["setup.py:__version__", "structured/__init__.py:__version__",]
