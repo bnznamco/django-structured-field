@@ -164,6 +164,40 @@ def test_admin_custom_widget_create_nested_fk_qs_fields(cache_setting_fixture, a
     assert "test2" in str(response.content)
 
 
+# Stored string values containing </script> must not break out of the widget's inline script
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_admin_widget_escapes_script_breakout(cache_setting_fixture, admin_client):
+    from tests.app.test_module.models import TestModel
+
+    payload = '</script><script>alert(1)</script>'
+    TestModel.objects.create(
+        title="xss",
+        structured_data={"name": payload, "age": 1},
+        structured_data_list=[],
+        structured_data_union={"data": {"name": "x", "age": 1, "type": "schema1"}},
+        structured_data_recursive={"child_model": None},
+    )
+    response = admin_client.get("/admin/test_module/testmodel/1/change/")
+    assert response.status_code == 200
+    content = response.content.decode()
+    # the raw breakout sequence must not appear anywhere in the page
+    assert "</script><script>alert(1)" not in content
+    # the value survives as a valid JSON escape inside the inline script
+    assert "\\u003C/script\\u003E" in content
+
+
+def test_script_safe_json_dumps_round_trip():
+    """script_safe_json_dumps output must be valid JSON decoding to the input."""
+    from structured.widget.widgets import script_safe_json_dumps
+
+    value = {"name": '</script><script>alert(1)</script>', "amp": "a&b", "n": 1}
+    dumped = script_safe_json_dumps(value)
+    assert "</script>" not in dumped
+    assert "&" not in dumped
+    assert json.loads(dumped) == value
+
+
 # --- StructuredJSONFormField coverage ---
 
 @pytest.mark.django_db

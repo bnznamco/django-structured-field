@@ -9,6 +9,21 @@ from django.utils.translation import get_language
 from structured.pydantic.models import BaseModel
 
 
+# Escapes for embedding JSON inside a <script> element (same strategy as
+# django.utils.html.json_script): valid JSON string escapes that decode to the
+# original characters but cannot terminate the script element or be parsed as
+# HTML entities, preventing "</script>" breakout from stored values.
+_JSON_SCRIPT_ESCAPES = {
+    ord(">"): "\\u003E",
+    ord("<"): "\\u003C",
+    ord("&"): "\\u0026",
+}
+
+
+def script_safe_json_dumps(value) -> str:
+    return json.dumps(value).translate(_JSON_SCRIPT_ESCAPES)
+
+
 def get_field_language(field_name: str) -> str:
     """
     Detect the language associated with a translated field, covering the main
@@ -79,12 +94,14 @@ class StructuredJSONFormWidget(Widget):
 
     def render(self, name, value, attrs=None, renderer=None):
         final_attrs = self.build_attrs(self.attrs, attrs)
+        if not isinstance(value, str):
+            value = json.dumps(value)
         context = {
-            "data": value,
+            "data": value.translate(_JSON_SCRIPT_ESCAPES),
             "name": name,
-            "schema": json.dumps(self.get_editor_schema()),
-            "ui_schema": json.dumps(self.ui_schema) if self.ui_schema else "{}",
-            "errors": json.dumps(self.errors),
+            "schema": script_safe_json_dumps(self.get_editor_schema()),
+            "ui_schema": script_safe_json_dumps(self.ui_schema) if self.ui_schema else "{}",
+            "errors": script_safe_json_dumps(self.errors),
             "widget_id": final_attrs.get("id", "id_%s" % name),
             "widget_class": final_attrs.get("class", ""),
             "language": get_field_language(name),
