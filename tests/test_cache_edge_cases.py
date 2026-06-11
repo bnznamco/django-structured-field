@@ -77,6 +77,52 @@ def test_flush_model_by_string_name_basic_cache(cache_setting_fixture):
     assert not cache.get(SimpleRelationModel)
 
 
+# Regression: an abstract-FK dict WITHOUT the 'model' discriminator must be
+# a proper validation error, not an escaping AttributeError/KeyError
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "cache_setting_fixture",
+    ["cache_enabled", "cache_disabled", "shared_cache"],
+    indirect=True,
+)
+def test_abstract_fk_dict_without_model_is_validation_error(cache_setting_fixture):
+    from pydantic import ValidationError as PydanticValidationError
+    from tests.app.test_module.models import TestSchema, ChildModel1
+
+    c1 = ChildModel1.objects.create(common_field="c", child_field="x")
+    with pytest.raises(PydanticValidationError):
+        TestSchema.validate_python(
+            {"name": "x", "age": 1, "abstract_fk": {"id": c1.pk}}
+        )
+
+
+# Abstract FK happy path: dicts with 'model' resolve to the right concrete
+# class and batch one query per concrete model
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_abstract_fk_batches_per_concrete_model(cache_setting_fixture, django_assert_num_queries):
+    from typing import List
+    from structured.cache.cache import Cache, CACHE_CONTEXT_KEY
+    from tests.app.test_module.models import TestSchema, ChildModel1, ChildModel2
+
+    c1 = ChildModel1.objects.create(common_field="c1", child_field="x")
+    c2 = ChildModel2.objects.create(common_field="c2", child_field="y")
+    data_list: List[dict] = [
+        {"name": "a", "age": 1, "abstract_fk": {"id": c1.pk, "model": "test_module.childmodel1"}},
+        {"name": "b", "age": 2, "abstract_fk": {"id": c2.pk, "model": "test_module.childmodel2"}},
+    ]
+    cache = Cache()
+    # one pk__in query per concrete model (they live in different tables)
+    with django_assert_num_queries(2):
+        TestSchema._cache_engine.build_cache(data_list, parent_cache=cache)
+        items = [
+            TestSchema.validate_python(d, context={CACHE_CONTEXT_KEY: cache})
+            for d in data_list
+        ]
+    assert isinstance(items[0].abstract_fk, ChildModel1)
+    assert isinstance(items[1].abstract_fk, ChildModel2)
+
+
 # Regression: cache layer must work for models without an `objects` manager
 @pytest.mark.django_db
 @pytest.mark.parametrize(

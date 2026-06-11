@@ -25,7 +25,9 @@ def extract_pk(data: Any, model: Type[django_models.Model]) -> Any:
         return data.pk
     if not isinstance(data, dict):
         return data
-    attname = model._meta.pk.attname
+    # abstract models have no pk field (_meta.pk is None)
+    pk_field = model._meta.pk
+    attname = pk_field.attname if pk_field is not None else "id"
     if attname in data:
         return data[attname]
     return data.get("id")

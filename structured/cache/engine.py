@@ -158,6 +158,10 @@ class CacheEngine:
         if isinstance(value, dict):
             if "model" in value:
                 model = apps.get_model(*value["model"].split("."))
+            elif model._meta.abstract:
+                # unresolvable abstract reference (no 'model' discriminator):
+                # skip harvesting and let the field validators raise properly
+                return
             # wire-format dicts key the pk as 'id' regardless of attname
             value = extract_pk(value, model)
         if value:

@@ -50,7 +50,13 @@ class ForeignKey(Generic[T]):
                 return None
             model_class = get_type(source)
             if is_abstract:
-                model_class = apps.get_model(*data["model"].split("."))
+                model_label = data.get("model")
+                if not model_label:
+                    raise ValueError(
+                        f"Cannot resolve abstract {model_class.__name__} reference "
+                        f"from {data!r}: missing 'model' key."
+                    )
+                model_class = apps.get_model(*model_label.split("."))
             pk = extract_pk(data, model_class)
             if pk is None:
                 # raise ValueError (not KeyError) so pydantic reports a
