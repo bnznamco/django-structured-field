@@ -68,10 +68,21 @@ class ForeignKey(Generic[T]):
             ]
         )
 
+        def validate_from_cache(v: ValueWithCache):
+            from inspect import isclass
+
+            # A failed trial of another union variant may have spliced a
+            # ValueWithCache bound to a DIFFERENT model into the shared raw
+            # dict (build_cache mutates in place). Never resolve through a
+            # mismatched cache binding — recover the original pk instead.
+            if isclass(v.model) and issubclass(v.model, model_class):
+                return v.retrieve()
+            return validate_from_pk(v.value)
+
         from_cache_schema = cs.chain_schema(
             [
                 cs.is_instance_schema(ValueWithCache),
-                cs.no_info_plain_validator_function(lambda v: v.retrieve()),
+                cs.no_info_plain_validator_function(validate_from_cache),
             ]
         )
 

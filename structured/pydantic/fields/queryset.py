@@ -73,10 +73,21 @@ class QuerySet(Generic[T]):
                 cs.no_info_plain_validator_function(validate_from_dict),
             ]
         )
+
+        def validate_from_cache(v: ValueWithCache):
+            from inspect import isclass
+
+            # Defend against ValueWithCache objects spliced by a failed
+            # trial of another union variant (bound to a different model):
+            # recover the original pk list and resolve against this model.
+            if isclass(v.model) and issubclass(v.model, get_mclass()):
+                return v.retrieve()
+            return validate_from_pk_list(list(v.value))
+
         from_cache_schema = cs.chain_schema(
             [
                 cs.is_instance_schema(ValueWithCache),
-                cs.no_info_plain_validator_function(lambda v: v.retrieve()),
+                cs.no_info_plain_validator_function(validate_from_cache),
             ]
         )
 

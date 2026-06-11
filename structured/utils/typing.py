@@ -69,15 +69,17 @@ def get_type_eval(source: Generic[T], model: Any, raise_exception: bool = True) 
 
 
 def find_model_type_from_args(args: List[Any], base_model: Type, model_type: Type) -> Optional[Type]:
-    """Find and return the model type from the provided arguments."""
+    """Find and return the first model type from the provided arguments."""
+    return next(iter(find_model_types_from_args(args, base_model, model_type)), None)
+
+
+def find_model_types_from_args(args: List[Any], base_model: Type, model_type: Type) -> List[Type]:
+    """Find and return ALL model types from the provided arguments."""
     lazy_types = [
         LazyType(arg).evaluate(base_model) for arg in args if isinstance(arg, str)
     ]
-    return next(
-        (
-            c
-            for c in list(args) + lazy_types
-            if isclass(c) and issubclass(c, model_type)
-        ),
-        None,
-    )
+    return [
+        c
+        for c in list(args) + lazy_types
+        if isclass(c) and issubclass(c, model_type)
+    ]

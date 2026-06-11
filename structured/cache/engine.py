@@ -5,7 +5,7 @@ from typing import Annotated, Any, Dict, List, Tuple, Set, Sequence, Type, TYPE_
 from django.db.models import Model as DjangoModel
 from django.apps import apps
 from structured.settings import settings
-from structured.utils.typing import get_type, find_model_type_from_args
+from structured.utils.typing import get_type, find_model_type_from_args, find_model_types_from_args
 from structured.utils.django import extract_pk
 from structured.utils.getter import pointed_getter
 from structured.utils.setter import pointed_setter
@@ -99,9 +99,17 @@ class CacheEngine:
                         )
                         break
                 else:
-                    subclass = find_model_type_from_args(args, model, CacheEnabledModel)
-                    if subclass:
-                        related[field_name] = RelInfo(subclass, RelInfo.RIField, field)
+                    subclasses = find_model_types_from_args(args, model, CacheEnabledModel)
+                    if len(subclasses) == 1:
+                        related[field_name] = RelInfo(subclasses[0], RelInfo.RIField, field)
+                    # 2+ schema variants in the union: skip parent-level
+                    # harvesting — we cannot know which variant a raw dict
+                    # belongs to, and harvesting with the wrong variant's
+                    # engine splices ValueWithCache objects bound to the
+                    # WRONG Django model (same-named relation fields then
+                    # silently resolve to the wrong instance). Each
+                    # variant's own build_cache wrap-validator still
+                    # batch-fetches its relations per item.
 
         return related
 
