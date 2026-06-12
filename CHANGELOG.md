@@ -2,6 +2,78 @@
 
 <!-- version list -->
 
+## v1.6.0 (2026-06-12)
+
+### Bug Fixes
+
+- **auth**: Update search endpoint to require staff access and add corresponding tests
+  ([`3403d6e`](https://github.com/bnznamco/django-structured-field/commit/3403d6e3f837294facb464673886f717b2d79f35))
+
+- **cache**: Flush only the requested model or data instead of clearing the whole cache
+  ([`66c3abf`](https://github.com/bnznamco/django-structured-field/commit/66c3abf5a923a65273d304a0b144c290c58cb82d))
+
+- **cache**: Handle abstract FK dicts without a model discriminator
+  ([`88fc772`](https://github.com/bnznamco/django-structured-field/commit/88fc772f4c4bf1471a586e6afcbd8c52ff5ef7ce))
+
+- **cache**: Stop union variants from mis-binding relations to the wrong model
+  ([`9ad1b0f`](https://github.com/bnznamco/django-structured-field/commit/9ad1b0ff87fa159eb9320e1557f18b58c7a453bc))
+
+- **cache**: Use _default_manager consistently for relation fetches
+  ([`da11328`](https://github.com/bnznamco/django-structured-field/commit/da11328ad38b60eaae30c50309b7e05549e5f5ff))
+
+- **fields**: Pass None through get_prep_value and skip validating NULL values
+  ([`d3ec9ae`](https://github.com/bnznamco/django-structured-field/commit/d3ec9aea9c732dabfbea330e4f2df29e65037bb7))
+
+- **fields**: Return pristine raw data when descriptor validation fails
+  ([`6ee864b`](https://github.com/bnznamco/django-structured-field/commit/6ee864bf92ef5a7246da6c58dce45eed43a88031))
+
+- **packaging**: Ship management command and schema-migration generator, stop packaging tests
+  ([`05b63e3`](https://github.com/bnznamco/django-structured-field/commit/05b63e3eece37b255cd0c12edfebedec325ed016))
+
+- **pydantic**: Let subclass annotations override ancestors and preserve inherited defaults
+  ([`7ff9b70`](https://github.com/bnznamco/django-structured-field/commit/7ff9b7084dbfe2be37204284d9408a47d909d07c))
+
+- **raw_data**: Manage per-instance raw data snapshots and add corresponding tests
+  ([`270eeff`](https://github.com/bnznamco/django-structured-field/commit/270eeffdbb6a2877e3d9f438361ddab10493d24f))
+
+- **relations**: Accept both pk attname and 'id' when reading persisted relation dicts
+  ([`60bb927`](https://github.com/bnznamco/django-structured-field/commit/60bb92772777e77d9b38e6898fc383697d745612))
+
+- **widget**: Implement JSON escaping for script safety and add corresponding tests
+  ([`de75894`](https://github.com/bnznamco/django-structured-field/commit/de75894c3da9d48e38cf603e191e6b60bc4bcd7a))
+
+### Chores
+
+- **CI**: Fix multiple coverage merging before sending to codecod
+  ([`6f4caf7`](https://github.com/bnznamco/django-structured-field/commit/6f4caf74eace97b6a134ec4dac534dee24b33d50))
+
+- **CI**: Upload to codecov once with OIDC
+  ([`7c1b9de`](https://github.com/bnznamco/django-structured-field/commit/7c1b9de7c7c2c0a233dcad194dd13d9d656d3569))
+
+### Continuous Integration
+
+- Gate PyPI publishing on an actual release, with a force_publish recovery path
+  ([`db5dda5`](https://github.com/bnznamco/django-structured-field/commit/db5dda59986bcfd7ed1f1fc94eb4ccb1f5295318))
+
+### Documentation
+
+- Update prefetch_related documentation
+  ([`9a42bdc`](https://github.com/bnznamco/django-structured-field/commit/9a42bdcd7606229e20103e33111804bf8c911381))
+
+### Features
+
+- Add structured prefetching support for JSON fields
+  ([`557aaa8`](https://github.com/bnznamco/django-structured-field/commit/557aaa86e5687024524c38c0b05fb17fd58e3875))
+
+- Implement per-instance caching for StructuredJSONField to optimize data fetching
+  ([`d0b0433`](https://github.com/bnznamco/django-structured-field/commit/d0b043329ee496d47032eb0a6a104d6afab614f8))
+
+### Refactoring
+
+- **orm**: Remove unused imports from dataclasses
+  ([`fdf5a22`](https://github.com/bnznamco/django-structured-field/commit/fdf5a22210f6567ea75ee0cca8253e2b76f2f747))
+
+
 ## v1.5.3 (2026-05-07)
 
 ### Bug Fixes
