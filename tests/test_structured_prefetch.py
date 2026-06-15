@@ -311,6 +311,64 @@ def test_auto_install_leaves_unrelated_models_alone():
         )
 
 
+def test_auto_install_preserves_inherited_custom_manager():
+    """A model that adds a StructuredJSONField to a parent carrying a custom
+    manager (inherited from an abstract base, so never in ``local_managers``)
+    must KEEP that manager's methods. The auto-install promotes it in place
+    instead of overwriting ``objects`` with a bare StructuredManager.
+    """
+    from structured.orm import StructuredQuerySetMixin
+    from tests.app.test_module.models import PublishableBookModel
+
+    mgr = PublishableBookModel.objects
+    assert hasattr(mgr, "published"), (
+        "inherited .published() was lost — the manager was replaced, not promoted"
+    )
+    assert issubclass(mgr._queryset_class, StructuredQuerySetMixin), (
+        "promoted manager is not structured-aware"
+    )
+
+
+@pytest.mark.django_db
+def test_inherited_manager_method_and_structured_prefetch_compose(authors):
+    """The promoted inherited manager exposes BOTH its own query method
+    (``.published()``) and the structured prefetch optimization."""
+    from tests.app.test_module.models import Author, PublishableBookModel
+
+    for i in range(4):
+        PublishableBookModel.objects.create(
+            title=f"pub-book-{i}",
+            is_published=(i % 2 == 0),
+            structured_data={
+                "title": f"pub-book-{i}",
+                "author": authors[i % len(authors)].pk,
+                "co_authors": [a.pk for a in authors],
+            },
+        )
+
+    # 1. The inherited custom method survived promotion and filters correctly.
+    published = list(PublishableBookModel.objects.published())
+    assert len(published) == 2 and all(b.is_published for b in published)
+
+    # 2. The structured prefetch optimization is available on the same manager
+    #    (2 queries: outer rows + one batched author fetch with country joined).
+    qs = PublishableBookModel.objects.prefetch_related(
+        Prefetch(
+            "structured_data__author",
+            queryset=Author.objects.select_related("country"),
+        )
+    )
+    with CaptureQueriesContext(connection) as ctx:
+        loaded = list(qs)
+        names = [b.structured_data.author.country.name for b in loaded]
+
+    assert all(names)
+    assert len(ctx.captured_queries) == 2, (
+        f"structured prefetch lost on the promoted inherited manager: "
+        f"{len(ctx.captured_queries)} queries"
+    )
+
+
 @pytest.mark.django_db
 def test_auto_install_works_end_to_end_without_explicit_manager(books):
     """

@@ -58,6 +58,7 @@ Design notes
 """
 from __future__ import annotations
 
+import copy
 import threading
 from collections import defaultdict
 from dataclasses import dataclass
@@ -564,9 +565,14 @@ class StructuredManager(models.Manager.from_queryset(StructuredQuerySet)):
 #      original — preserving any custom manager methods or queryset
 #      methods the user defined.
 #   2. If no manager — local or inherited — is structured-aware after
-#      step 1, install a default :class:`StructuredManager` locally as
-#      ``objects``. This handles child models that add a structured field
-#      to a parent that didn't have one.
+#      step 1, make the model's default manager structured-aware. When that
+#      manager is *inherited* (e.g. ``objects`` from an abstract base, which
+#      never appears in ``local_managers``), it's cloned locally with the
+#      mixin layered on — preserving its class, name and methods — rather
+#      than overwritten with a bare :class:`StructuredManager` that would
+#      drop them. Only when there's nothing to inherit do we install a plain
+#      StructuredManager. This handles child models that add a structured
+#      field to a parent that didn't have one.
 #
 # The synthesis is memoised so ``isinstance`` checks and pickling stay
 # stable across calls. Promotion is a no-op for managers that are
@@ -637,16 +643,56 @@ def _promote_managers(sender: Type[models.Model], **kwargs: Any) -> None:
         if promoted is not original:
             manager._queryset_class = promoted
 
-    # If neither a local nor an inherited manager carries the mixin, fall
-    # back to a default StructuredManager so users always get the
-    # extended ``prefetch_related`` on ``Model.objects``.
+    # If neither a local nor an inherited manager carries the mixin, make the
+    # model's default manager structured-aware. A model that *inherits* its
+    # manager from a (possibly abstract) base has no local manager for the loop
+    # above to promote — Django surfaces inherited managers only as ephemeral
+    # copies in ``_meta.managers``, never in ``local_managers``. Rather than
+    # overwrite ``objects`` with a bare StructuredManager — which would discard
+    # the inherited manager's own methods (e.g. a custom ``.public()``) — clone
+    # that manager locally with the mixin layered onto its queryset, preserving
+    # its class, name and methods. Only when there's genuinely nothing to
+    # inherit do we fall back to a plain StructuredManager.
     if not any(
         issubclass(m._queryset_class, StructuredQuerySetMixin)
         for m in sender._meta.managers
     ):
-        mgr = StructuredManager()
-        mgr.auto_created = True
-        mgr.contribute_to_class(sender, "objects")
+        if not _promote_inherited_default_manager(sender):
+            mgr = StructuredManager()
+            mgr.auto_created = True
+            mgr.contribute_to_class(sender, "objects")
+
+
+def _promote_inherited_default_manager(sender: Type[models.Model]) -> bool:
+    """Re-install the model's inherited default manager *locally* with
+    :class:`StructuredQuerySetMixin` mixed onto its queryset class.
+
+    Preserves the inherited manager's class, name and methods, so a model that
+    gains a :class:`~structured.fields.StructuredJSONField` keeps the manager it
+    inherited (e.g. one exposing ``.public()``) instead of having it replaced by
+    a bare :class:`StructuredManager`. Returns ``False`` when there is no
+    inherited manager worth promoting, leaving the caller to install a plain
+    StructuredManager.
+    """
+    meta = sender._meta
+    name = meta.default_manager_name or "objects"
+    inherited = meta.managers_map.get(name)
+    if inherited is None:
+        # No manager under the expected name — fall back to the resolved default
+        # (lowest depth/creation-counter), e.g. a model whose only manager is
+        # custom-named.
+        managers = meta.managers
+        if not managers:
+            return False
+        inherited = managers[0]
+    promoted_qs = _promote_qs_class(inherited._queryset_class)
+    if promoted_qs is inherited._queryset_class:
+        return False  # already structured-aware; nothing to do
+    promoted_mgr = copy.copy(inherited)
+    promoted_mgr._queryset_class = promoted_qs
+    promoted_mgr.auto_created = True
+    promoted_mgr.contribute_to_class(sender, inherited.name)
+    return True
 
 
 # Connect once at module load. ``class_prepared`` is dispatched per model

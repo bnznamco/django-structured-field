@@ -234,3 +234,39 @@ class BookModel(models.Model):
 
     def __str__(self) -> str:
         return self.title
+
+
+# ---------------------------------------------------------------------------
+# Inherited custom manager + structured field.
+#
+# A model can carry a custom manager via an *abstract* base. Django surfaces
+# such a manager only as an ephemeral copy in ``_meta.managers`` — never in the
+# child's ``_meta.local_managers`` — so the auto-install must promote it without
+# discarding its methods. Regression for the manager being replaced by a bare
+# StructuredManager (which dropped ``.published()`` & co.).
+# ---------------------------------------------------------------------------
+
+class PublishableQuerySet(models.QuerySet):
+    def published(self):
+        return self.filter(is_published=True)
+
+
+class PublishableBase(models.Model):
+    is_published = models.BooleanField(default=False)
+
+    objects = PublishableQuerySet.as_manager()
+
+    class Meta:
+        abstract = True
+
+
+class PublishableBookModel(PublishableBase):
+    """Adds a StructuredJSONField to a parent that already carries a custom
+    manager. ``objects`` must keep ``.published()`` AND gain structured-field
+    awareness — no explicit manager declared here."""
+
+    title = models.CharField(max_length=255)
+    structured_data = StructuredJSONField(schema=BookSchema, default=init_book_schema)
+
+    def __str__(self) -> str:
+        return self.title
