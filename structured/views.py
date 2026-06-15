@@ -63,7 +63,11 @@ def search(request, model):
         page_obj = paginator.get_page(page)
         Serializer = build_model_serializer(None if model._meta.abstract else model)
         return JsonResponse({
-                "items": Serializer(instance=page_obj, many=True, context={"mode": "json"}).data,
+                "items": Serializer(
+                    instance=page_obj,
+                    many=True,
+                    context={"mode": "json", "search": True},
+                ).data,
                 "more": page_obj.has_next(),
             },
             safe=False

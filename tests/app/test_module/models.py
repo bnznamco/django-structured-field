@@ -47,6 +47,22 @@ class SimpleRelationModel(models.Model):
         return self.name
 
 
+class SearchDisplayModel(models.Model):
+    """Relation target that contributes presentation-only fields (e.g. a
+    thumbnail URL) to the relation search dropdown via the generic
+    ``get_structured_search_display`` hook. The extra data appears ONLY in
+    search results — never in the persisted relation wire format."""
+
+    name = models.CharField(max_length=255)
+    thumbnail = models.CharField(max_length=500, blank=True, default="")
+
+    def __str__(self) -> str:
+        return self.name
+
+    def get_structured_search_display(self) -> dict:
+        return {"image": self.thumbnail, "description": f"Item {self.pk}"}
+
+
 class CustomManagerModel(models.Model):
     """Relation target whose ONLY manager is custom-named: Django does not
     auto-create `objects`, so cache-layer code must use _default_manager."""

@@ -65,11 +65,37 @@ class BaseModelSerializer(serializers.Serializer):
         max_depth = settings.STRUCTURED_SERIALIZATION_MAX_DEPTH
         if mode == "python" and current_depth <= max_depth:
             return super().to_representation(instance)
-        return instance and {
+        if not instance:
+            return instance
+        data = {
             "id": instance.pk,
             "name": instance.__str__(),
             "model": f"{instance._meta.app_label}.{instance._meta.model_name}",
         }
+        # When serving the relation search endpoint (context["search"]),
+        # models may contribute extra, presentation-only fields (e.g. an image
+        # URL or a secondary label) that the widget renders in the dropdown.
+        # This NEVER affects the persisted relation wire format — the minimal
+        # {id, name, model} dict — because persistence dumps run without the
+        # search flag. The structural keys id/model stay authoritative.
+        if context.get("search"):
+            display = self.get_search_display(instance)
+            for key, value in display.items():
+                if key not in ("id", "model"):
+                    data[key] = value
+        return data
+
+    def get_search_display(self, instance: django_models.Model) -> dict:
+        """Return extra display data for an instance shown in relation search
+        results. Generic opt-in hook: a model contributes fields by defining a
+        ``get_structured_search_display()`` method returning a dict (e.g.
+        ``{"image": self.thumbnail_url, "description": "..."}``)."""
+        hook = getattr(instance, "get_structured_search_display", None)
+        if callable(hook):
+            result = hook()
+            if isinstance(result, dict):
+                return result
+        return {}
 
 
 def build_model_serializer(

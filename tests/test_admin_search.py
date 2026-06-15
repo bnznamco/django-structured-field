@@ -117,6 +117,50 @@ def test_search_model_wrong_model(cache_setting_fixture, admin_client):
     assert response.status_code == 404
 
 
+# Test the generic display hook surfaces extra fields in search results
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled", "cache_disabled", "shared_cache"], indirect=True)
+def test_search_model_display_hook(cache_setting_fixture, admin_client):
+    """A model defining get_structured_search_display contributes extra,
+    presentation-only fields to search results; id/model stay authoritative."""
+    from tests.app.test_module.models import SearchDisplayModel
+
+    obj = SearchDisplayModel.objects.create(name="poster", thumbnail="/media/x.jpg")
+    response = admin_client.get(
+        "/structured_field/search_model/test_module.SearchDisplayModel/?_q=poster"
+    )
+    body = response.json()
+    items = body.get("items", [])
+    assert response.status_code == 200
+    assert len(items) == 1
+    item = items[0]
+    assert item["id"] == obj.pk
+    assert item["model"] == "test_module.searchdisplaymodel"
+    assert item["name"] == "poster"
+    assert item["image"] == "/media/x.jpg"
+    assert item["description"] == f"Item {obj.pk}"
+
+
+# Test the display hook NEVER leaks into the persisted relation wire format
+@pytest.mark.django_db
+@pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
+def test_search_display_hook_excluded_from_wire_format(cache_setting_fixture):
+    """The display hook only runs under the search context. A plain json-mode
+    dump (the persisted wire format) must stay the minimal {id, name, model}."""
+    from tests.app.test_module.models import SearchDisplayModel
+    from structured.utils.serializer import build_model_serializer
+
+    obj = SearchDisplayModel.objects.create(name="poster", thumbnail="/media/x.jpg")
+    Serializer = build_model_serializer(SearchDisplayModel)
+
+    persisted = Serializer(instance=obj, context={"mode": "json"}).data
+    assert set(persisted.keys()) == {"id", "name", "model"}
+    assert persisted["id"] == obj.pk
+
+    searched = Serializer(instance=obj, context={"mode": "json", "search": True}).data
+    assert searched["image"] == "/media/x.jpg"
+
+
 # Test search on abstract model with query filter
 @pytest.mark.django_db
 @pytest.mark.parametrize("cache_setting_fixture", ["cache_enabled"], indirect=True)
