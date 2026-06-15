@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v1.7.0 (2026-06-15)
+
+### Chores
+
+- **ci**: Ensure CODECOV_TOKEN is used for coverage uploads
+  ([`d2fc55d`](https://github.com/bnznamco/django-structured-field/commit/d2fc55ddad98cef75afc08c0bfb5c6e1d4a49400))
+
+### Features
+
+- **search**: Add support for presentation-only fields in relation search results
+  ([`386a637`](https://github.com/bnznamco/django-structured-field/commit/386a63719cf99353ff71d0eec7a482927a1b9bd5))
+
+
 ## v1.6.0 (2026-06-12)
 
 ### Bug Fixes
