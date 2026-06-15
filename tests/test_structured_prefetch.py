@@ -269,6 +269,110 @@ def test_prefetch_only_naming_field_raises():
 
 
 # ---------------------------------------------------------------------------
+# Whole-document seeding: accessing a structured field hydrates ALL its
+# relations, so the prefetch must seed every relation in the document — not
+# just the named path — or the rest falls back to a per-row N+1.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_partial_filter_does_not_n_plus_1_unprefetched_relations(books):
+    """A FILTERED subset must not regress: accessing the document hydrates
+    ``co_authors`` (a QSField) even though only ``author`` was prefetched. The
+    co-authors are batch-fetched once, not per row.
+
+    Without whole-document seeding this was 4 queries for 2 rows and grew with
+    the row count; the planned ``author`` path only *coincidentally* covered
+    ``co_authors`` when the whole table was loaded.
+    """
+    from tests.app.test_module.models import Author, BookModel
+
+    # book-0 / book-2 reference authors 1 & 3; author 2 appears only via
+    # co_authors, so it is the PK the planned path fails to cover.
+    qs = BookModel.objects.filter(title__in=["book-0", "book-2"]).prefetch_related(
+        Prefetch(
+            "structured_data__author",
+            queryset=Author.objects.select_related("country"),
+        )
+    )
+
+    def run():
+        for book in qs:
+            _ = book.structured_data.author.country.name      # planned path
+            assert all(co.name for co in book.structured_data.co_authors)  # hydrated
+
+    n, captured = _count_queries(run)
+    # outer rows + author(+country) + one batched co_authors fetch.
+    assert n == 3, (
+        f"un-prefetched co_authors N+1'd on a filtered subset: {n} queries\n"
+        + "\n".join(q["sql"] for q in captured)
+    )
+
+
+@pytest.mark.django_db
+def test_partial_filter_query_count_is_independent_of_row_count(authors):
+    """The whole-document seed makes the count O(1) in rows: a 1-row and a
+    10-row filtered slice issue the same number of queries (no N+1 tail)."""
+    from tests.app.test_module.models import Author, BookModel
+
+    # Fixed primary author across all rows so the planned ``author`` seed never
+    # grows; co_authors always references every author, so authors 2 & 3 are
+    # only ever reachable via the un-prefetched co_authors path. The query count
+    # must then be constant no matter how many rows match.
+    for i in range(20):
+        BookModel.objects.create(
+            title=f"row-{i}",
+            structured_data={
+                "title": f"row-{i}",
+                "author": authors[0].pk,
+                "co_authors": [a.pk for a in authors],
+            },
+        )
+
+    def run(titles):
+        qs = BookModel.objects.filter(title__in=titles).prefetch_related(
+            Prefetch(
+                "structured_data__author",
+                queryset=Author.objects.select_related("country"),
+            )
+        )
+        for book in qs:
+            _ = book.structured_data.author.country.name
+            _ = [co.name for co in book.structured_data.co_authors]
+
+    one, _ = _count_queries(lambda: run(["row-1"]))
+    ten, _ = _count_queries(lambda: run([f"row-{i}" for i in range(1, 20, 2)]))
+    assert one == ten, f"row count leaked into query count: {one} vs {ten} (N+1)"
+
+
+@pytest.mark.django_db
+def test_two_plans_same_model_do_not_clobber_enriched_instances(books):
+    """Two plans targeting the same model (an FK ``author`` with an inner
+    ``country`` join + the ``co_authors`` QSField) must not have the plainer
+    fetch overwrite the enriched one in the seed. Previously this *added* a
+    query (the country prefetch was lost); now it composes cleanly."""
+    from tests.app.test_module.models import Author, BookModel
+
+    qs = BookModel.objects.filter(title__in=["book-0", "book-2"]).prefetch_related(
+        Prefetch(
+            "structured_data__author",
+            queryset=Author.objects.select_related("country"),
+        ),
+        "structured_data__co_authors",
+    )
+
+    def run():
+        for book in qs:
+            _ = book.structured_data.author.country.name
+
+    n, captured = _count_queries(run)
+    assert n == 3, (
+        f"same-model plans clobbered each other: {n} queries\n"
+        + "\n".join(q["sql"] for q in captured)
+    )
+
+
+# ---------------------------------------------------------------------------
 # Auto-install: managers are promoted via class_prepared without any
 # explicit opt-in in the model body.
 # ---------------------------------------------------------------------------

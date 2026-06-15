@@ -391,45 +391,53 @@ def _merge_plans(
     return merged
 
 
-def _execute_structured_prefetch(
+def _field_cache_engine(model: Type[models.Model], field_name: str):
+    """Cache engine for the schema of ``model.field_name`` (a
+    ``StructuredJSONField``), or ``None``.
+
+    Used to enumerate every relation a document hydrates by reusing the
+    engine's own extraction — which already handles nested / list / union /
+    abstract shapes — instead of re-walking the schema by hand.
+    """
+    field = _resolve_structured_field(model, field_name)
+    if field is None:
+        return None
+    schema = getattr(field, "orig_schema", None)
+    return getattr(schema, "_cache_engine", None)
+
+
+def _plan_is_enriched(plan: StructuredPrefetchPlan) -> bool:
+    """Whether ``plan`` carries fetch hints (custom queryset / select_related /
+    inner prefetch).
+
+    NB: ``custom_queryset is not None`` — never ``bool(queryset)``, which would
+    evaluate the queryset against the DB just to test it.
+    """
+    return bool(
+        plan.custom_queryset is not None
+        or plan.inner_select_related
+        or plan.inner_prefetch_related
+    )
+
+
+def _seed_planned_paths(
     rows: Sequence[models.Model],
-    plans: Sequence[StructuredPrefetchPlan],
-) -> None:
+    merged: Sequence[StructuredPrefetchPlan],
+) -> Dict[Type[models.Model], Dict[Any, models.Model]]:
+    """Fetch each planned path (with its hints) into a fresh seed mapping.
+
+    Enriching plans are seeded first and never overwritten by a plainer fetch of
+    the same instance — two plans may target the same model (e.g. an FK field
+    and a QuerySet field on one document both pointing at Author).
     """
-    Two-phase execution:
-
-    1. Gather PKs from each row's raw JSON (read directly from
-       ``__dict__`` to avoid triggering the structured-field descriptor),
-       then bulk-fetch each target model with the planned hints, building
-       a seed mapping.
-    2. Push the seed onto the thread-local stack and force-evaluate the
-       structured fields named by the plans. The cache engine consults
-       the seed before issuing its own queries, so the prefetched
-       instances are reused.
-    """
-    if not rows or not plans:
-        return
-
-    merged = _merge_plans(plans)
-
-    # ------------------------------------------------------------------ #
-    # Phase 1 — gather PKs.
-    # ------------------------------------------------------------------ #
-    pks_by_plan: Dict[int, Set[Any]] = defaultdict(set)
-    for plan_idx, plan in enumerate(merged):
+    seed: Dict[Type[models.Model], Dict[Any, models.Model]] = defaultdict(dict)
+    for plan in sorted(merged, key=lambda p: not _plan_is_enriched(p)):
         pk_attname = plan.target_model._meta.pk.attname
+        pks: Set[Any] = set()
         for row in rows:
             raw = row.__dict__.get(plan.field_name)
-            if raw is None:
-                continue
-            pks_by_plan[plan_idx].update(_gather_pks(raw, plan.json_path, pk_attname))
-
-    # ------------------------------------------------------------------ #
-    # Phase 1b — execute one inner fetch per plan, merging into seed.
-    # ------------------------------------------------------------------ #
-    seed: Dict[Type[models.Model], Dict[Any, models.Model]] = defaultdict(dict)
-    for plan_idx, plan in enumerate(merged):
-        pks = pks_by_plan.get(plan_idx)
+            if raw is not None:
+                pks.update(_gather_pks(raw, plan.json_path, pk_attname))
         if not pks:
             continue
         base = (
@@ -443,20 +451,84 @@ def _execute_structured_prefetch(
         if plan.inner_prefetch_related:
             qs = qs.prefetch_related(*plan.inner_prefetch_related)
         for obj in qs:
-            seed[plan.target_model][obj.pk] = obj
+            seed[plan.target_model].setdefault(obj.pk, obj)
+    return seed
 
-    if not seed:
-        # Nothing to seed (all paths were empty); still trigger validation
-        # so the queryset behaves consistently with stock prefetch_related.
-        for plan in merged:
-            for row in rows:
-                getattr(row, plan.field_name, None)
+
+def _seed_document_relations(
+    rows: Sequence[models.Model],
+    merged: Sequence[StructuredPrefetchPlan],
+    seed: Dict[Type[models.Model], Dict[Any, models.Model]],
+) -> None:
+    """Seed every *other* relation the documents hydrate, in place.
+
+    Accessing a structured field resolves the whole document, not just the
+    planned path. Reuse the field's own cache engine to enumerate the document's
+    relations from the raw JSON, then batch-fetch — one query per model — the
+    PKs the planned fetches did not already cover (plain: these carry no hints).
+    Without this, those relations fall back to a per-row ``filter(pk__in=…)``.
+    """
+    model_cls = type(rows[0])
+    extra_pks: Dict[Type[models.Model], Set[Any]] = defaultdict(set)
+    for field_name in {plan.field_name for plan in merged}:
+        engine = _field_cache_engine(model_cls, field_name)
+        if engine is None:
+            continue
+        for row in rows:
+            raw = row.__dict__.get(field_name)
+            if raw is None:
+                continue
+            for model, tuples in engine.get_all_fk_data(raw).items():
+                for _path, value in tuples:
+                    if isinstance(value, (list, tuple, set, frozenset)):
+                        extra_pks[model].update(v for v in value if v is not None)
+                    elif value is not None:
+                        extra_pks[model].add(value)
+
+    for model, pks in extra_pks.items():
+        missing = {pk for pk in pks if pk not in seed.get(model, {})}
+        if not missing:
+            continue
+        for obj in model._default_manager.filter(pk__in=missing):
+            seed[model].setdefault(obj.pk, obj)
+
+
+def _execute_structured_prefetch(
+    rows: Sequence[models.Model],
+    plans: Sequence[StructuredPrefetchPlan],
+) -> None:
+    """
+    Build a complete seed, then force structured-field validation under it.
+
+    1. :func:`_seed_planned_paths` — bulk-fetch each planned path with its hints
+       (gathering PKs from each row's raw JSON, read directly from ``__dict__``
+       to avoid triggering the structured-field descriptor).
+    2. :func:`_seed_document_relations` — accessing a structured field hydrates
+       the WHOLE document, not just the planned path, so batch-fetch the
+       remaining relation PKs too. Without this a relation sharing the document
+       with the prefetched path falls back to a per-row ``filter(pk__in=…)`` —
+       an N+1 that only stays hidden when the planned path's PKs happen to cover
+       it.
+    3. Push the seed onto the thread-local stack and force-evaluate the
+       structured fields. The cache engine consults the seed before issuing its
+       own queries, so every prefetched instance is reused.
+    """
+    if not rows or not plans:
         return
 
-    # ------------------------------------------------------------------ #
-    # Phase 2 — trigger structured-field validation under the seed scope.
-    # ------------------------------------------------------------------ #
+    merged = _merge_plans(plans)
+    seed = _seed_planned_paths(rows, merged)
+    _seed_document_relations(rows, merged, seed)
+
     fields_touched = {plan.field_name for plan in merged}
+    if not seed:
+        # Nothing to seed (all paths were empty); still trigger validation so
+        # the queryset behaves consistently with stock prefetch_related.
+        for field_name in fields_touched:
+            for row in rows:
+                getattr(row, field_name, None)
+        return
+
     with _SeedScope(seed):
         for field_name in fields_touched:
             for row in rows:
