@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.7.2 (2026-06-15)
+
+### Bug Fixes
+
+- **orm**: Batch-fetch all structured-document relations to kill prefetch N+1
+  ([`e8fa544`](https://github.com/bnznamco/django-structured-field/commit/e8fa544a18137d141a21ab9817effce9f6b1c542))
+
+
 ## v1.7.1 (2026-06-15)
 
 ### Bug Fixes
