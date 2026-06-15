@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.7.1 (2026-06-15)
+
+### Bug Fixes
+
+- **orm**: Fix orm overring abstract models with inherited manages
+  ([`444f2b3`](https://github.com/bnznamco/django-structured-field/commit/444f2b3a213445c86df41c9a149e38a8bea35215))
+
+
 ## v1.7.0 (2026-06-15)
 
 ### Chores
